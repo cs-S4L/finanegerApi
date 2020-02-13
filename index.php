@@ -34,6 +34,9 @@ switch ($endpoint) {
 		break;
 	case 'getBills':
         $endpointController = new src\endpoints\listBills();
+		break;
+	case 'getAccounts':
+        $endpointController = new src\endpoints\listAccounts();
         break;
     default:
         break;
