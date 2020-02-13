@@ -3,7 +3,7 @@ namespace src\endpoints;
 
 use src\interfaces;
 
-class ListFinances implements interfaces\iEndpoint {
+class ListBills implements interfaces\iEndpoint {
 
     public function executeEndpoint($data) {
 		//return just one if data.id is set
@@ -16,12 +16,12 @@ class ListFinances implements interfaces\iEndpoint {
 
         $return = array(
             'id1' => array(
-                'date'=> 'left bla blub',
+                'dueDate'=> 'left bla blub',
                 'description'=> 'bla blub',
 				'amount'=> 'number',
             ),
             'id2' => array(
-                'date'=> 'left',
+                'dueDate'=> 'left',
                 'description'=> 'bla blub',
                 'amount'=> 'number'
 
