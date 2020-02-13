@@ -6,17 +6,48 @@ use src\interfaces;
 class Finances implements interfaces\iEndpoint {
 
 	public function set($data) {
+		if (!isset($data)) {
+			echo 'No Data given';
+			die();
+		}
 
+		echo json_encode(array('success'=>true));
+		// echo json_encode(array('error'=>array('amount' => 'Error amount')));
+		die();
 	}
 
 	public function get($data) {
-		//return just one if data.id is set
-		if (is_null($data)) {
-			//check for User in Session
-			echo ('test');
-		} else {
-			//check credentials
+		// wenn id gesetzt ist, einzelnen Eintrag zurück geben
+		if (isset($data['id'])) {
+			if ($data['id'] === 'create') {
+				//Seite zum erstellen eines neuen Eintrags wurde geöffnet
+				//Nur Kontooptionen zurück geben
+				echo json_encode(array(
+					'accountOptions' => array(
+						array('value'=>'acc1', 'name'=>'Konto1'),
+						array('value'=>'acc2', 'name'=>'Konto2')
+					)
+				));
+				die();
+			}
+			
+			echo json_encode(array(
+				'item' => array(
+					'description' => 'test',
+					'type' => 'test',
+					'amount' => 'test',
+					'account' => 'test',
+					'date' => 'test',
+					'note' => 'thats a note',
+				),
+				'accountOptions' => array(
+					array('value'=>'acc1', 'name'=>'Konto1'),
+					array('value'=>'acc2', 'name'=>'Konto2')
+				)
+			));
+			die();
 		}
+
 		
 		$return = array(
 			'id1' => array(
@@ -28,16 +59,8 @@ class Finances implements interfaces\iEndpoint {
 				'date'=> 'left',
 				'description'=> 'bla blub',
 				'amount'=> 'number'
-		
 			),
-			
 		);
-		
-		// $return = {
-		//     'id1' => {
-		//     },
-		//     ),
-		// };
 		
 		echo json_encode($return);
 		die();

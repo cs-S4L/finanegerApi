@@ -6,10 +6,30 @@ use src\interfaces;
 class Accounts implements interfaces\iEndpoint {
 
 	public function set($data) {
+		if (!isset($data)) {
+			echo 'No Data given';
+			die();
+		}
 
+		echo json_encode(array('success'=>true));
+		// echo json_encode(array('error'=>array('amount' => 'Error amount')));
+		die();
 	}
 
 	public function get($data) {
+		// wenn id gesetzt ist, einzelnen Eintrag zurück geben
+		if (isset($data['id'])) {
+			echo json_encode(array(
+				'item' => array(
+					'description' => 'test',
+					'bank' => 'test',
+					'balance' => 'test',
+					'owner' => 'test',
+				),
+			));
+			die();
+		}
+
 		//return just one if data.id is set
 		if (is_null($data)) {
 			//check for User in Session
