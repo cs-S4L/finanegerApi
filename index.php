@@ -29,7 +29,7 @@ switch ($endpoint) {
     case 'register':
         $endpointController = new src\endpoints\Register();
         break;
-    case 'listFinances':
+    case 'getFinances':
         $endpointController = new src\endpoints\listFinances();
         break;
     default:

@@ -6,18 +6,19 @@ use src\interfaces;
 class ListFinances implements interfaces\iEndpoint {
 
     public function executeEndpoint($data) {
+		//return just one if data.id is set
         if (is_null($data)) {
-            //check for User in Session
+			//check for User in Session
+			echo ('test');
         } else {
             //check credentials
         }
 
         $return = array(
             'id1' => array(
-                'left'=> 'left',
+                'left'=> 'left bla blub',
                 'text'=> 'bla blub',
-                'number'=> 'number'
-
+				'number'=> 'number',
             ),
             'id2' => array(
                 'left'=> 'left',

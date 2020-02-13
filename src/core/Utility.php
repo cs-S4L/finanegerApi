@@ -25,11 +25,11 @@ class Utility
         require($classFilePath);
     }
 
-    public static function handleException(Throwable $exception) {
-        if (ini_get("display_errors") === "1") {
-            $exception->displayException();
-        } else {
-            echo "Ups, da ist wohl was schiefgelaufen! Der Techniker ist informiert.";
-        }
-    }
+    // public static function handleException(Throwable $exception) {
+    //     if (ini_get("display_errors") === "1") {
+    //         $exception->displayException();
+    //     } else {
+    //         echo "Ups, da ist wohl was schiefgelaufen! Der Techniker ist informiert.";
+    //     }
+    // }
 }
