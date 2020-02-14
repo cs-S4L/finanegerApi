@@ -15,49 +15,46 @@ if (empty($_GET) || empty($_GET['endpoint']) || empty($_GET['action'])) {
 }
 
 $data = $_POST;
-$data = null;
-if (!empty($_POST)) {
-    $data = array();
-    foreach ($_POST as $key => $value) {
-		if (!is_array($value)) {
-			$safeVal = htmlspecialchars($value);
-			$safeKey = htmlspecialchars($key);
+// $data = null;
+// if (!empty($_POST)) {
+//     $data = array();
+//     foreach ($_POST as $key => $value) {
+// 		if (!is_array($value)) {
+// 			$safeVal = htmlspecialchars($value);
+// 			$safeKey = htmlspecialchars($key);
 
-			$data[$safeKey] = $safeVal;
-		} else {
-			$data[$key] = $value;
-		}
+// 			$data[$safeKey] = $safeVal;
+// 		} else {
+// 			$data[$key] = $value;
+// 		}
         
-    }
-}
-
-// if ($data)
+//     }
+// }
 
 switch ($endpoint) {
 	case 'token':
-		$endpointController = new src\endpoints\Token($action);
+		$endpointController = new src\endpoints\Token($data);
 		break;
     case 'user':
-        $endpointController = new src\endpoints\User($action);
+        $endpointController = new src\endpoints\User($data);
         break;
     case 'Finances':
-        $endpointController = new src\endpoints\Finances();
+        $endpointController = new src\endpoints\Finances($data);
 		break;
 	case 'Bills':
-        $endpointController = new src\endpoints\Bills();
+        $endpointController = new src\endpoints\Bills($data);
 		break;
 	case 'Accounts':
-        $endpointController = new src\endpoints\Accounts();
+        $endpointController = new src\endpoints\Accounts($data);
         break;
 	case 'FixedCosts':
-        $endpointController = new src\endpoints\FixedCosts();
+        $endpointController = new src\endpoints\FixedCosts($data);
         break;
     default:
         break;
 }
 
 if (isset($endpointController)) {
-	// $endpointController->executeEndpoint($data);
 	switch ($action) {
 		case 'set':
 			$endpointController->set($data);

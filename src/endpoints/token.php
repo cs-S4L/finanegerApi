@@ -4,7 +4,7 @@ namespace src\endpoints;
 use src\interfaces;
 use src\classes as classes;
 
-class Token implements interfaces\iEndpoint {
+class Token extends Endpoint implements interfaces\iEndpoint {
 	public function set($data) {
 		if (
 			isset($data['hash']) 
@@ -50,6 +50,10 @@ class Token implements interfaces\iEndpoint {
 	}
 
 	public function delete($data) {
+		if (!$this->validSession) {
+			die(json_encode('Unauthenticated access'));
+		}
+		
 		if (isset($data)
 			&& isset($data['userToken'])
 			&& isset($data['userToken']['sessionId'])

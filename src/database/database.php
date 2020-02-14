@@ -49,13 +49,36 @@ class Database {
 
 		return $sql->execute();
 	}
-	public function readFromDatabase($table, $where = null, $selection = '*', $fetchMode=\PDO::FETCH_ASSOC) {
+	public function readFromDatabase(
+		$table,
+		$where = null,
+		$selection = '*',
+		$limit = '',
+		$order = '',
+		$direction = '',
+		$offset = '',
+		$fetchMode=\PDO::FETCH_ASSOC
+	) {
 		$statement = "";
 		if (is_null($where)) {
 			$statement = "SELECT $selection FROM $table";
 		} else {
 			$statement = "SELECT $selection FROM $table WHERE $where";
 		}
+
+		if (!empty($order)) {
+			$statement .= " ORDER BY $order $direction";
+			
+			if (!empty($offset)) {
+				$statement .= " OFFSET $offset ROWS";
+			}
+		}
+
+		if (!empty($limit)) {
+			$statement .= " Limit $limit";
+			// die(\json_encode($statement));
+		}
+
 		
 		$sql = $this->conn->prepare($statement);
 		
@@ -81,43 +104,51 @@ class Database {
 
 		return $sql->fetchAll($fetchMode);
 	}
-	
-	// public function updateDatabase($table, $values, $where=null) {
-	// 	$statement = "";
-	// 	$hasWhere = !is_null($where);
 
-    //     $set = '';
-    //     foreach($values as $key => $value) {
-    //     	$set .= "$key = :$key";
-    //     }
+	public function updateDatabase($table, $values, $where=null) {
+		$statement = "";
+		$hasWhere = !is_null($where);
 
-    //     if ($hasWhere) {
-    //     	$whereString = '';
-    //     	foreach($where as $key => $value) {
-    //     		$whereString .= "$key = :$key";
-    //     	}
-    //     }
+        $set = '';
+        foreach($values as $key => $value) {
+			if (empty($set)) {
+				$set .= "$key = :$key";
+			} else {
+				$set .= ", $key = :$key";
+			}
+        }
 
-	// 	if ($hasWhere) {
-	// 		$statement = "UPDATE $table SET $set WHERE $whereString";
-	// 	} else {
-	// 		$statement = "UPDATE $table SET $set";
-	// 	}
+        if ($hasWhere) {
+        	$whereString = '';
+        	foreach($where as $key => $value) {
+				if (empty($whereString)) {
+					$whereString .= "$key = :$key";
+				} else {
+					$whereString .= " AND $key = :$key";
+				}
+        	}
+        }
 
-	// 	$sql = $this->conn->prepare($statement);
+		if ($hasWhere) {
+			$statement = "UPDATE $table SET $set WHERE $whereString";
+		} else {
+			$statement = "UPDATE $table SET $set";
+		}
 
-	// 	foreach($values as $key => $value) {
-	// 		$sql->bindValue(":$key", $value);
-	// 	}
+		$sql = $this->conn->prepare($statement);
 
-	// 	if ($hasWhere) {
-	// 		foreach($where as $key => $value) {
-	// 			$sql->bindValue(":$key", $value);
-	// 		}
-	// 	}
+		foreach($values as $key => $value) {
+			$sql->bindValue(":$key", $value);
+		}
 
-	// 	return $sql->execute();
-	// }
+		if ($hasWhere) {
+			foreach($where as $key => $value) {
+				$sql->bindValue(":$key", $value);
+			}
+		}
+
+		return $sql->execute();
+	}
 
 	private function logDatabaseAccess($statement) {
 		if (SERVER_MODE == 'PRODUCTION') {
