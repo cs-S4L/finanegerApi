@@ -5,14 +5,21 @@ use src\interfaces;
 use src\classes as classes;
 
 class Token extends Endpoint implements interfaces\iEndpoint {
-	public function set($data) {
+	public function set() {
 		if (
-			isset($data['hash']) 
-			&& isset($data['api_key'])
-			&& isset($data['email'])
-			&& isset($data['password'])
+			isset($this->data['hash']) 
+			&& isset($this->data['api_key'])
+			&& isset($this->data['email'])
+			&& isset($this->data['password'])
 		) {
-			$result = classes\Authentication::get()->createSessionId($data);
+			classes\Validate::get()->escapeStrings(
+				$this->data['hash'],
+				$this->data['api_key'],
+				$this->data['email'],
+				$this->data['password']
+			);
+
+			$result = classes\Authentication::get()->createSessionId($this->data);
 	
 			if ($result === false) {
 				die(json_encode(
@@ -29,14 +36,14 @@ class Token extends Endpoint implements interfaces\iEndpoint {
 					)
 				));
 			}
-			die(\json_encode($data));
+			die(\json_encode($this->data));
 		} else {
 			http_response_code(404);
 		}
 	}
 
-	public function get($data) {
-		if (!empty($data)) {
+	public function get() {
+		if (!empty($this->data)) {
 			http_response_code(404);
 		} else {
 			$keys = classes\Authentication::get()->createKeys();
@@ -45,21 +52,25 @@ class Token extends Endpoint implements interfaces\iEndpoint {
 
 	}
 
-	public function update($data){
+	public function update(){
 		die('Endpoint not implemented');
 	}
 
-	public function delete($data) {
+	public function delete() {
 		if (!$this->validSession) {
 			die(json_encode('Unauthenticated access'));
 		}
 		
-		if (isset($data)
-			&& isset($data['userToken'])
-			&& isset($data['userToken']['sessionId'])
-			&& isset($data['userToken']['userId'])
+		if (isset($this->data)
+			&& isset($this->data['userToken'])
+			&& isset($this->data['userToken']['sessionId'])
+			&& isset($this->data['userToken']['userId'])
 		) {
-			$result = classes\Authentication::get()->deleteSessionId($data['userToken']);
+			classes\Validate::get()->escapeStrings(
+				$this->data['userToken']['sessionId'],
+				$this->data['userToken']['userId']
+			);
+			$result = classes\Authentication::get()->deleteSessionId($this->data['userToken']);
 
 			die(json_encode(
 				array(

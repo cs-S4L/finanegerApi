@@ -5,33 +5,65 @@ use src\interfaces;
 use src\classes as classes;
 use src\database as db;
 
-class User implements interfaces\iEndpoint {
-	public function set($data) {
+class User extends Endpoint implements interfaces\iEndpoint {
+	public function set() {
+		// die(json_encode($this->data));
+
 		if (
-			isset($data['hash']) 
-			&& isset($data['api_key'])
-			&& isset($data['email'])
-			&& isset($data['password'])
+			isset($this->data['hash']) 
+			&& isset($this->data['api_key'])
+			&& isset($this->data['email'])
+			&& isset($this->data['password'])
 		) {
-			/**
-			* TODO validate
-			*/
+			classes\Validate::get()->escapeStrings(
+				$this->data['hash'],
+				$this->data['api_key'],
+				$this->data['email'],
+				$this->data['email'],
+				$this->data['password'],
+				$this->data['name'],
+				$this->data['surname']
+			);
+
+			$errors = array();
+
+			classes\Validate::get()->validate(
+				'email', $this->data['email'], $errors, 'err_RegisterMail'
+			);
+			classes\Validate::get()->validate(
+				'word', $this->data['name'], $errors, 'err_RegisterName'
+			);
+			classes\Validate::get()->validate(
+				'word', $this->data['surname'], $errors, 'err_RegisterSurname'
+			);
+			classes\Validate::get()->validate(
+				'password', $this->data['password'], $errors, 'err_RegisterPassword'
+			);
+
+			if (!empty($errors)) {
+				die(\json_encode(
+					array(
+						'error' => $errors
+					)
+				));
+			}
+			
 			$userData = array(
-				'email' => $data['email'],
-				'password' => password_hash($data['password'], PASSWORD_BCRYPT),
-				'name' => $data['name'],
-				'surname' => $data['surname'],
+				'email' => $this->data['email'],
+				'password' => password_hash($this->data['password'], PASSWORD_BCRYPT),
+				'name' => $this->data['name'],
+				'surname' => $this->data['surname'],
 			);
 
 			$result = db\Database::get()->insertIntoDatabase('users', $userData);
 			
-			$result = classes\Authentication::get()->createSessionId($data);
+			$result = classes\Authentication::get()->createSessionId($this->data);
 
 			if ($result === false) {
 				die(json_encode(
 					array(
 						'error' => array(
-							'err_LoginForm' =>'Fehlerhafte Eingabe'
+							'err_LoginForm' =>'Fehler!'
 						)
 					)
 				));
@@ -42,23 +74,23 @@ class User implements interfaces\iEndpoint {
 					)
 				));
 			}
-			die(\json_encode($data));
+			die(\json_encode($this->data));
 		} else {
 			http_response_code(404);
 		}
 	}
 
-	public function get($data) {
+	public function get() {
 		//TODO
 		die('Endpoint not implemented');
 	}
 
-	public function update($data){
+	public function update(){
 		//TODO
 		die('Endpoint not implemented');
 	}
 
-	public function delete($data) {
+	public function delete() {
 		//TODO
 		die('Endpoint not implemented');
 	}

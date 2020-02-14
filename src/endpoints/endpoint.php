@@ -15,6 +15,11 @@ abstract class Endpoint {
 	public function __construct($data) {
 		$this->data = $data;
 
+		classes\Validate::get()->escapeStrings(
+			$data['userToken']['userId'],
+			$data['userToken']['sessionId']
+		);
+
 		if (isset($data['userToken'])) {
 			$valid = classes\Authentication::get()->checkSessionId(
 				$data['userToken']['userId'],
@@ -22,6 +27,7 @@ abstract class Endpoint {
 			);
 			if ($valid) {
 				$this->validSession = true;
+				
 				$this->userId = $data['userToken']['userId'];
 				$this->sessionId = $data['userToken']['sessionId'];
 			} else {

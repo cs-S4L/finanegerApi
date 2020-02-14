@@ -7,20 +7,20 @@ use src\database as db;
 
 class Accounts extends Endpoint implements interfaces\iEndpoint {
 
-	public function set($data) {
+	public function set() {
 		if (!$this->validSession) {
 			die(json_encode('Unauthenticated access'));
 		}
 
-		if (!isset($data)) {
+		if (!isset($this->data)) {
 			die('No Data given');
 		}
 
-		if (is_array($data['data'])) {
-			$params = $data['data'];
+		if (is_array($this->data['data'])) {
+			$params = $this->data['data'];
 		} else {
 			$params = array();
-			parse_str($data['data'], $params);
+			parse_str($this->data['data'], $params);
 		}
 		// die(json_encode($params));
 
@@ -32,6 +32,15 @@ class Accounts extends Endpoint implements interfaces\iEndpoint {
 		$insert['balance'] = (isset($params['balance'])) ? $params['balance'] : '';
 		$insert['owner'] = (isset($params['owner'])) ? $params['owner'] : '';
 
+		classes\Validate::get()->escapeStrings(
+			$insert['user_id'],
+			$insert['type'],
+			$insert['description'],
+			$insert['bank'],
+			$insert['balance'],
+			$insert['owner']
+		);
+
 		$return = db\Database::get()->insertIntoDatabase(
 			'app_accounts',
 			$insert
@@ -40,16 +49,18 @@ class Accounts extends Endpoint implements interfaces\iEndpoint {
 		die(json_encode(array('success'=>true)));
 	}
 
-	public function get($data) {
+	public function get() {
 		if (!$this->validSession) {
 			die(json_encode('Unauthenticated access'));
 		}
 
 		// wenn id gesetzt ist, einzelnen Eintrag zurück geben
-		if (isset($data['id'])) {
+		if (isset($this->data['id'])) {
+			classes\Validate::get()->escapeStrings($this->data['id']);
+
 			$result = db\Database::get()->readFromDatabase(
 				'app_accounts',
-				'user_id = \''.$this->userId.'\' AND id = '. $data['id']
+				'user_id = \''.$this->userId.'\' AND id = '. $this->data['id']
 			);
 
 			$return = array(
@@ -76,14 +87,11 @@ class Accounts extends Endpoint implements interfaces\iEndpoint {
 			die(\json_encode($return));
 			
 		} else {
-			$offset = (isset($data['offset']) && !empty($data['offset'])) ? $data['offset'] : '';
-			$limit = (isset($data['limit']) && !empty($data['limit'])) ? $data['limit'] : '';
+			$offset = (isset($this->data['offset']) && !empty($this->data['offset'])) ? $this->data['offset'] : '';
+			$limit = (isset($this->data['limit']) && !empty($this->data['limit'])) ? $this->data['limit'] : '';
 
-			// $result = db\Database::get()->readFromDatabase(
-			// 	'app_accounts',
-			// 	'user_id = root',
-			// 	'*'
-			// );
+			classes\Validate::get()->escapeStrings($offset, $limit);
+
 			$result = db\Database::get()->readFromDatabase(
 				'app_accounts',
 				// 'user_id = "root"',
@@ -117,20 +125,20 @@ class Accounts extends Endpoint implements interfaces\iEndpoint {
 		}
 	}
 	
-	public function update($data) {
+	public function update() {
 		if (!$this->validSession) {
 			die(json_encode('Unauthenticated access'));
 		}
 
-		if (!isset($data)) {
+		if (!isset($this->data)) {
 			die('No Data given');
 		}
 
-		if (is_array($data['data'])) {
-			$params = $data['data'];
+		if (is_array($this->data['data'])) {
+			$params = $this->data['data'];
 		} else {
 			$params = array();
-			parse_str($data['data'], $params);
+			parse_str($this->data['data'], $params);
 		}
 
 		$insert = array();
@@ -139,6 +147,14 @@ class Accounts extends Endpoint implements interfaces\iEndpoint {
 		$insert['bank'] = (isset($params['bank'])) ? $params['bank'] : '';
 		$insert['balance'] = (isset($params['balance'])) ? $params['balance'] : '';
 		$insert['owner'] = (isset($params['owner'])) ? $params['owner'] : '';
+
+		classes\Validate::get()->escapeStrings(
+			$insert['type'],
+			$insert['description'],
+			$insert['bank'],
+			$insert['balance'],
+			$insert['owner']
+		);
 
 		$return = db\Database::get()->updateDatabase(
 			'app_accounts',
@@ -152,21 +168,23 @@ class Accounts extends Endpoint implements interfaces\iEndpoint {
 		die(json_encode(array('success'=>true)));
 	}
 	
-	public function delete($data) {
+	public function delete() {
 		if (!$this->validSession) {
 			die(json_encode('Unauthenticated access'));
 		}
 
-		if (!isset($data)) {
+		if (!isset($this->data)) {
 			die('No Data given');
 		}
 
-		if (is_array($data['data'])) {
-			$params = $data['data'];
+		if (is_array($this->data['data'])) {
+			$params = $this->data['data'];
 		} else {
 			$params = array();
-			parse_str($data['data'], $params);
+			parse_str($this->data['data'], $params);
 		}
+
+		classes\Validate::get()->escapeStrings($params['id']);
 
 		$return = db\Database::get()->deleteFromDatabase(
 			'app_accounts',
