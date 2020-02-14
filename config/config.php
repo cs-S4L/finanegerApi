@@ -4,7 +4,7 @@ $cfg = [
         'host' => 'localhost',
         'user' => 'root',
         'password' => 'root',
-        'name' => '',
-        'port' => '',
+        'name' => 'finaneger',
+        'port' => '8889',
     ]
 ];

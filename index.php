@@ -2,6 +2,8 @@
 //this has to be changed in Production
 header('Access-Control-Allow-Origin: *');
 
+session_start();
+
 require ('src/init.php');
 
 if (empty($_GET) || empty($_GET['endpoint']) || empty($_GET['action'])) {
@@ -12,23 +14,31 @@ if (empty($_GET) || empty($_GET['endpoint']) || empty($_GET['action'])) {
 	$action = $_GET['action'];
 }
 
+$data = $_POST;
 $data = null;
 if (!empty($_POST)) {
     $data = array();
     foreach ($_POST as $key => $value) {
-        $safeVal = htmlspecialchars($value);
-        $safeKey = htmlspecialchars($key);
+		if (!is_array($value)) {
+			$safeVal = htmlspecialchars($value);
+			$safeKey = htmlspecialchars($key);
+
+			$data[$safeKey] = $safeVal;
+		} else {
+			$data[$key] = $value;
+		}
         
-        $data[$safeKey] = $safeVal;
     }
 }
 
+// if ($data)
+
 switch ($endpoint) {
-    case 'login':
-        $endpointController = new src\endpoints\Login($action);
-        break;
-    case 'register':
-        $endpointController = new src\endpoints\Register($action);
+	case 'token':
+		$endpointController = new src\endpoints\Token($action);
+		break;
+    case 'user':
+        $endpointController = new src\endpoints\User($action);
         break;
     case 'Finances':
         $endpointController = new src\endpoints\Finances();
