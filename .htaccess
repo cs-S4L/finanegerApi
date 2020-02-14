@@ -1,0 +1,12 @@
+RewriteEngine On
+
+#Order allow,deny
+#Deny from All
+
+<FilesMatch "^(index\.php)?$">
+        Allow from All
+</FilesMatch>
+
+# Rewrite for article.php?id=1&title=Title-Goes-Here
+#RewriteRule ^article/([0-9]+)/([0-9a-zA-Z_-]+)$ article.php?id=$1&title=$2 [NC,L]
+RewriteRule ^([0-9a-zA-Z_-]+)/([0-9a-zA-Z_-]+)$ index.php?endpoint=$1&action=$2 [NC,L]
