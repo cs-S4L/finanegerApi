@@ -1,97 +1,111 @@
 <?php
 namespace src\endpoints;
 
-use src\interfaces;
 use src\classes as classes;
 use src\database as db;
+use src\interfaces;
 
-class User extends Endpoint implements interfaces\iEndpoint {
-	public function set() {
-		// die(json_encode($this->data));
+class User extends Endpoint implements interfaces\iEndpoint
+{
+    public function set()
+    {
+        if (
+            isset($this->data['hash'])
+            && isset($this->data['api_key'])
+            && isset($this->data['email'])
+            && isset($this->data['password'])
+        ) {
+            classes\Validate::get()->escapeStrings(
+                $this->data['hash'],
+                $this->data['api_key'],
+                $this->data['email'],
+                $this->data['email'],
+                $this->data['password'],
+                $this->data['name'],
+                $this->data['surname']
+            );
 
-		if (
-			isset($this->data['hash']) 
-			&& isset($this->data['api_key'])
-			&& isset($this->data['email'])
-			&& isset($this->data['password'])
-		) {
-			classes\Validate::get()->escapeStrings(
-				$this->data['hash'],
-				$this->data['api_key'],
-				$this->data['email'],
-				$this->data['email'],
-				$this->data['password'],
-				$this->data['name'],
-				$this->data['surname']
-			);
+            $validKeys = classes\Authentication::get()->validateKeys(
+                $this->data['api_key'],
+                $this->data['hash']
+            );
 
-			$errors = array();
+            if (!$validKeys) {
+                die(\json_encode('Invalid Keys'));
+            }
 
-			classes\Validate::get()->validate(
-				'email', $this->data['email'], $errors, 'err_RegisterMail'
-			);
-			classes\Validate::get()->validate(
-				'word', $this->data['name'], $errors, 'err_RegisterName'
-			);
-			classes\Validate::get()->validate(
-				'word', $this->data['surname'], $errors, 'err_RegisterSurname'
-			);
-			classes\Validate::get()->validate(
-				'password', $this->data['password'], $errors, 'err_RegisterPassword'
-			);
+            $errors = array();
 
-			if (!empty($errors)) {
-				die(\json_encode(
-					array(
-						'error' => $errors
-					)
-				));
-			}
-			
-			$userData = array(
-				'email' => $this->data['email'],
-				'password' => password_hash($this->data['password'], PASSWORD_BCRYPT),
-				'name' => $this->data['name'],
-				'surname' => $this->data['surname'],
-			);
+            classes\Validate::get()->validate(
+                'email', $this->data['email'], $errors, 'err_RegisterMail'
+            );
+            classes\Validate::get()->validate(
+                'word', $this->data['name'], $errors, 'err_RegisterName'
+            );
+            classes\Validate::get()->validate(
+                'word', $this->data['surname'], $errors, 'err_RegisterSurname'
+            );
+            classes\Validate::get()->validate(
+                'password', $this->data['password'], $errors, 'err_RegisterPassword'
+            );
 
-			$result = db\Database::get()->insertIntoDatabase('users', $userData);
-			
-			$result = classes\Authentication::get()->createSessionId($this->data);
+            classes\Validate::get()->checkEmailExists($this->data['email'], $errors, 'err_RegisterMail');
 
-			if ($result === false) {
-				die(json_encode(
-					array(
-						'error' => array(
-							'err_LoginForm' =>'Fehler!'
-						)
-					)
-				));
-			} else {
-				die(\json_encode(
-					array(
-						'userToken' => $result
-					)
-				));
-			}
-			die(\json_encode($this->data));
-		} else {
-			http_response_code(404);
-		}
-	}
+            if (!empty($errors)) {
+                die(\json_encode(
+                    array(
+                        'error' => $errors,
+                    )
+                ));
+            }
 
-	public function get() {
-		//TODO
-		die('Endpoint not implemented');
-	}
+            $userData = array(
+                'email' => $this->data['email'],
+                'password' => password_hash($this->data['password'], PASSWORD_BCRYPT),
+                'name' => $this->data['name'],
+                'surname' => $this->data['surname'],
+            );
 
-	public function update(){
-		//TODO
-		die('Endpoint not implemented');
-	}
+            $result = db\Database::get()->insertIntoDatabase('users', $userData);
 
-	public function delete() {
-		//TODO
-		die('Endpoint not implemented');
-	}
+            $result = classes\Authentication::get()->createSessionId($this->data);
+
+            if ($result === false) {
+                die(json_encode(
+                    array(
+                        'error' => array(
+                            'err_LoginForm' => 'Fehler!',
+                        ),
+                    )
+                ));
+            } else {
+                die(\json_encode(
+                    array(
+                        'userToken' => $result,
+                    )
+                ));
+            }
+            die(\json_encode($this->data));
+        } else {
+            http_response_code(404);
+        }
+    }
+
+    public function get()
+    {
+        //TODO
+        die('Endpoint not implemented');
+    }
+
+    public function update()
+    {
+        //TODO
+        die('Endpoint not implemented');
+    }
+
+    public function delete()
+    {
+        //TODO
+        die('Endpoint not implemented');
+    }
 }
