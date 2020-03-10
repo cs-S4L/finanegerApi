@@ -46,17 +46,20 @@ class Authentication
 
     public function validateKeys($api_key, $hash)
     {
+        $validKeys = true;
         $auth_key = db\Database::get()->readFromDatabase(
             'auth_keys',
             'api_key = "' . $api_key . '"'
         );
 
         //wenn Auth Key nicht gefunden, mehrere gefunden oder abgelaufen
-        if (empty($auth_key)
-            || count($auth_key) > 1
+        if (empty($auth_key)) {
+            return false;
+        } else if (
+            count($auth_key) > 1
             || time() > $auth_key[0]['expireDate']
         ) {
-            return false;
+            $validKeys = false;
         }
 
         $auth_key = $auth_key[0];
@@ -64,10 +67,15 @@ class Authentication
         $serverHash = md5($auth_key['api_key'] . $auth_key['auth_key']);
 
         if ($serverHash != $hash) {
-            return false;
+            $validKeys = false;
         }
 
-        return true;
+        // benutze Keys aus DB löschen
+        // $result = db\Database::get()->deleteFromDatabase(
+        //     'auth_keys',
+        //     'api_key = "' . $api_key . '"'
+        // );
+        return $validKeys;
     }
 
     public function createSessionId($data)
@@ -79,7 +87,7 @@ class Authentication
             return false;
         }
 
-        $sessionId = $this->createUniqueSessionId($userAuthentication['id'], $userAuthentication['email'], $userAuthentication['password']);
+        $sessionId = $this->createUniqueSessionId($userAuthentication);
         if ($sessionId) {
             return $sessionId;
         } else {
@@ -143,14 +151,14 @@ class Authentication
         return md5(bin2hex(random_bytes(64)) . time());
     }
 
-    private function createUniqueSessionId($userId, $email, $password)
+    private function createUniqueSessionId($user)
     {
-        $sessionId = \hash('sha256', $email . $password . time());
+        $sessionId = \hash('sha256', $user['email'] . $user['password'] . time());
 
         $result = db\Database::get()->insertIntoDatabase(
             'session_ids',
             array(
-                'user_id' => $userId,
+                'user_id' => $user['id'],
                 'session_id' => $sessionId,
                 'expireDate' => strtotime('+1 week'),
             )
@@ -159,7 +167,9 @@ class Authentication
         if ($result) {
             return array(
                 'sessionId' => $sessionId,
-                'userId' => $userId,
+                'userId' => $user['id'],
+                'name' => $user['name'],
+                'surname' => $user['surname'],
             );
         } else {
             return false;

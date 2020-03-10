@@ -42,6 +42,8 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
             $insert['owner']
         );
 
+        classes\Validate::get()->convertToEnglishNumberFormat($insert['balance']);
+
         $return = db\Database::get()->insertIntoDatabase(
             'app_accounts',
             $insert
@@ -85,6 +87,9 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
                     default:
                         $return['item']['type'] = '';
                 }
+
+                classes\Validate::get()->convertToGermanNumberFormat($return['item']['balance']);
+
             }
             die(\json_encode($return));
 
@@ -118,10 +123,13 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
                         default:
                             $value['type'] = '';
                     }
+                    classes\Validate::get()->convertToGermanNumberFormat($value['balance']);
                     $return[$value['id']] = $value;
 
                 }
             }
+
+            // $return['balance'] = \str_replace('.', ',', $return['balance']);
 
             die(\json_encode($return));
         }
@@ -158,6 +166,8 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
             $insert['balance'],
             $insert['owner']
         );
+
+        classes\Validate::get()->convertToEnglishNumberFormat($insert['balance']);
 
         $return = db\Database::get()->updateDatabase(
             'app_accounts',

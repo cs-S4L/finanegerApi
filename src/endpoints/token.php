@@ -47,7 +47,6 @@ class Token extends Endpoint implements interfaces\iEndpoint
                     )
                 ));
             }
-            die(\json_encode($this->data));
         } else {
             http_response_code(404);
         }

@@ -130,6 +130,19 @@ class Validate
         return;
     }
 
+    /**
+    @return string
+     */
+    public function convertToEnglishNumberFormat(&$number)
+    {
+        $number = str_replace(',', '.', str_replace('.', '', $number));
+    }
+
+    public function convertToGermanNumberFormat(&$number)
+    {
+        $number = str_replace('.', ',', str_replace(',', '', $number));
+    }
+
     private function addError(&$errors, $errorKey, $error)
     {
         $errors[$errorKey] = $error;
