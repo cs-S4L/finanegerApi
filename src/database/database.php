@@ -156,6 +156,19 @@ class Database
         return $sql->execute();
     }
 
+    public function addToValueInTable($table, $row, $value, $where = null, $operator = '+')
+    {
+        if (!is_null($where)) {
+            $statement = "UPDATE $table SET $row = $row $operator $value WHERE $where";
+        } else {
+            $statement = "UPDATE $table SET $row = $row $operator $value";
+        }
+
+        $sql = $this->conn->prepare($statement);
+
+        return $sql->execute();
+    }
+
     private function logDatabaseAccess($statement)
     {
         if (SERVER_MODE == 'PRODUCTION') {

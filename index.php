@@ -21,9 +21,9 @@ switch ($endpoint) {
     case 'user':
         $endpointController = new src\endpoints\User($_POST);
         break;
-    // case 'Finances':
-    //     $endpointController = new src\endpoints\Finances($_POST);
-    //     break;
+    case 'Finances':
+        $endpointController = new src\endpoints\Finances($_POST);
+        break;
     // case 'Bills':
     //     $endpointController = new src\endpoints\Bills($_POST);
     //     break;

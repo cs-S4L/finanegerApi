@@ -5,36 +5,84 @@ use src\interfaces;
 use src\classes as classes;
 use src\database as db;
 
-abstract class Endpoint {
+abstract class Endpoint
+{
 
-	protected $validSession = false;
-	protected $userId;
-	protected $sessionId;
-	protected $data;
+    protected $validSession = false;
+    protected $userId;
+    protected $sessionId;
+    protected $data;
 
-	public function __construct($data) {
-		$this->data = $data;
+    protected $database;
+    protected $validate;
+    protected $authentication;
 
-		classes\Validate::get()->escapeStrings(
-			$data['userToken']['userId'],
-			$data['userToken']['sessionId']
-		);
+    public function __construct($data)
+    {
+        $this->data = $data;
 
-		if (isset($data['userToken'])) {
-			$valid = classes\Authentication::get()->checkSessionId(
-				$data['userToken']['userId'],
-				$data['userToken']['sessionId']
-			);
-			if ($valid) {
-				$this->validSession = true;
-				
-				$this->userId = $data['userToken']['userId'];
-				$this->sessionId = $data['userToken']['sessionId'];
-			} else {
-				return;
-			}
-		} else {
-			return;
-		}
-	}
+        $this->database = db\Database::get();
+        $this->validate = classes\Validate::get();
+        $this->authentication = classes\Authentication::get();
+
+        $this->validate->escapeStrings(
+            $data['userToken']['userId'],
+            $data['userToken']['sessionId']
+        );
+
+        if (isset($data['userToken'])) {
+            $valid = $this->authentication->checkSessionId(
+                $data['userToken']['userId'],
+                $data['userToken']['sessionId']
+            );
+            if ($valid) {
+                $this->validSession = true;
+
+                $this->userId = $data['userToken']['userId'];
+                $this->sessionId = $data['userToken']['sessionId'];
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
+    }
+
+    protected function encrypt()
+    {
+        static $encryptObject = null;
+
+        if (is_null($encryptObject)) {
+            $encryptObject = new classes\Encrypt($this->userId);
+        }
+
+        return $encryptObject;
+    }
+
+    protected function checkSession()
+    {
+        if (!$this->validSession) {
+            die(json_encode('Unauthenticated access'));
+        }
+
+        $this->authentication->refreshSession($this->sessionId, $this->userId);
+    }
+
+    protected function checkData()
+    {
+        if (!isset($this->data)) {
+            die(json_encode('No Data given'));
+        }
+    }
+
+    //falls data nicht von String zu Array umgewandelt wurde
+    protected function convertData(&$params)
+    {
+        if (is_array($this->data['data'])) {
+            $params = $this->data['data'];
+        } else {
+            $params = array();
+            parse_str($this->data['data'], $params);
+        }
+    }
 }

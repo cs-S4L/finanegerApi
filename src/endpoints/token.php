@@ -21,7 +21,7 @@ class Token extends Endpoint implements interfaces\iEndpoint
                 $this->data['password']
             );
 
-            $validKeys = classes\Authentication::get()->validateKeys(
+            $validKeys = $this->authentication->validateKeys(
                 $this->data['api_key'],
                 $this->data['hash']
             );
@@ -30,7 +30,7 @@ class Token extends Endpoint implements interfaces\iEndpoint
                 die(\json_encode('Invalid Keys'));
             }
 
-            $result = classes\Authentication::get()->createSessionId($this->data);
+            $result = $this->authentication->createSessionId($this->data);
 
             if ($result === false) {
                 die(json_encode(
@@ -57,7 +57,7 @@ class Token extends Endpoint implements interfaces\iEndpoint
         if (!empty($this->data)) {
             http_response_code(404);
         } else {
-            $keys = classes\Authentication::get()->createKeys();
+            $keys = $this->authentication->createKeys();
             die(json_encode($keys));
         }
 
@@ -83,7 +83,7 @@ class Token extends Endpoint implements interfaces\iEndpoint
                 $this->data['userToken']['sessionId'],
                 $this->data['userToken']['userId']
             );
-            $result = classes\Authentication::get()->deleteSessionId($this->data['userToken']);
+            $result = $this->authentication->deleteSessionId($this->data['userToken']);
 
             die(json_encode(
                 array(

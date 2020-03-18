@@ -5,9 +5,12 @@ use src\database as db;
 
 class Authentication
 {
+    protected $database;
 
     public function __construct()
-    {}
+    {
+        $this->database = db\Database::get();
+    }
 
     public static function get()
     {
@@ -28,7 +31,7 @@ class Authentication
         $return['auth_key'] = $this->createRandomKey();
         $return['timestamp'] = strtotime('+30 minutes');
 
-        $result = db\Database::get()->insertIntoDatabase(
+        $result = $this->database->insertIntoDatabase(
             'auth_keys',
             array(
                 'api_key' => $return['api_key'],
@@ -47,7 +50,7 @@ class Authentication
     public function validateKeys($api_key, $hash)
     {
         $validKeys = true;
-        $auth_key = db\Database::get()->readFromDatabase(
+        $auth_key = $this->database->readFromDatabase(
             'auth_keys',
             'api_key = "' . $api_key . '"'
         );
@@ -71,7 +74,7 @@ class Authentication
         }
 
         // benutze Keys aus DB löschen
-        // $result = db\Database::get()->deleteFromDatabase(
+        // $result = $this->database->deleteFromDatabase(
         //     'auth_keys',
         //     'api_key = "' . $api_key . '"'
         // );
@@ -97,7 +100,7 @@ class Authentication
 
     public function deleteSessionId($data)
     {
-        $result = db\Database::get()->deleteFromDatabase(
+        $result = $this->database->deleteFromDatabase(
             'session_ids',
             'user_id = "' . $data['userId'] . '" AND session_id = "' . $data['sessionId'] . '"'
         );
@@ -106,7 +109,7 @@ class Authentication
 
     public function checkSessionId($userId, $sessionId)
     {
-        $sessionIdDb = db\Database::get()->readFromDatabase(
+        $sessionIdDb = $this->database->readFromDatabase(
             'session_ids',
             'user_id = "' . $userId . '" AND session_id = "' . $sessionId . '"'
         );
@@ -119,12 +122,25 @@ class Authentication
         } else {
             return true;
         }
+    }
 
+    public function refreshSession($sessionId, $userId)
+    {
+        $result = $this->database->updateDatabase(
+            'session_ids',
+            array(
+                'expireDate' => strtotime('+1 week'),
+            ),
+            array(
+                'user_id' => $userId,
+                'session_id' => $sessionId,
+            )
+        );
     }
 
     private function authenticateUser($email, $password)
     {
-        $userDb = db\Database::get()->readFromDatabase(
+        $userDb = $this->database->readFromDatabase(
             'users',
             'email = "' . $email . '"'
         );
@@ -155,7 +171,7 @@ class Authentication
     {
         $sessionId = \hash('sha256', $user['email'] . $user['password'] . time());
 
-        $result = db\Database::get()->insertIntoDatabase(
+        $result = $this->database->insertIntoDatabase(
             'session_ids',
             array(
                 'user_id' => $user['id'],

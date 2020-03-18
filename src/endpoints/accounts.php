@@ -1,8 +1,6 @@
 <?php
 namespace src\endpoints;
 
-use src\classes as classes;
-use src\database as db;
 use src\interfaces;
 
 class Accounts extends Endpoint implements interfaces\iEndpoint
@@ -10,20 +8,11 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
 
     public function set()
     {
-        if (!$this->validSession) {
-            die(json_encode('Unauthenticated access'));
-        }
+        $this->checkSession();
 
-        if (!isset($this->data)) {
-            die('No Data given');
-        }
+        $this->checkData();
 
-        if (is_array($this->data['data'])) {
-            $params = $this->data['data'];
-        } else {
-            $params = array();
-            parse_str($this->data['data'], $params);
-        }
+        $this->convertData($params);
 
         $insert = array();
         $insert['user_id'] = $this->userId;
@@ -33,7 +22,7 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
         $insert['balance'] = (isset($params['balance'])) ? $params['balance'] : '';
         $insert['owner'] = (isset($params['owner'])) ? $params['owner'] : '';
 
-        classes\Validate::get()->escapeStrings(
+        $this->validate->escapeStrings(
             $insert['user_id'],
             $insert['type'],
             $insert['description'],
@@ -42,9 +31,15 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
             $insert['owner']
         );
 
-        classes\Validate::get()->convertToEnglishNumberFormat($insert['balance']);
+        $this->validate->convertToEnglishNumberFormat($insert['balance']);
 
-        $return = db\Database::get()->insertIntoDatabase(
+        $this->encrypt()->encryptData(
+            $insert['description'],
+            $insert['bank'],
+            $insert['owner']
+        );
+
+        $return = $this->database->insertIntoDatabase(
             'app_accounts',
             $insert
         );
@@ -54,15 +49,15 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
 
     public function get()
     {
-        if (!$this->validSession) {
-            die(json_encode('Unauthenticated access'));
-        }
+        $this->checkSession();
+
+        $this->checkData();
 
         // wenn id gesetzt ist, einzelnen Eintrag zurück geben
         if (isset($this->data['id'])) {
-            classes\Validate::get()->escapeStrings($this->data['id']);
+            $this->validate->escapeStrings($this->data['id']);
 
-            $result = db\Database::get()->readFromDatabase(
+            $result = $this->database->readFromDatabase(
                 'app_accounts',
                 'user_id = \'' . $this->userId . '\' AND id = ' . $this->data['id']
             );
@@ -77,19 +72,13 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
             ) {
                 $return['item'] = $result[0];
 
-                switch ($return['item']['type']) {
-                    case 'checking':
-                        $return['item']['type'] = 'Girokonto';
-                        break;
-                    case 'saving':
-                        $return['item']['type'] = 'Sparkonto';
-                        break;
-                    default:
-                        $return['item']['type'] = '';
-                }
+                $this->encrypt()->decryptData(
+                    $return['item']['description'],
+                    $return['item']['bank'],
+                    $return['item']['owner']
+                );
 
-                classes\Validate::get()->convertToGermanNumberFormat($return['item']['balance']);
-
+                $this->validate->convertToGermanNumberFormat($return['item']['balance']);
             }
             die(\json_encode($return));
 
@@ -97,11 +86,10 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
             $offset = (isset($this->data['offset']) && !empty($this->data['offset'])) ? $this->data['offset'] : '';
             $limit = (isset($this->data['limit']) && !empty($this->data['limit'])) ? $this->data['limit'] : '';
 
-            classes\Validate::get()->escapeStrings($offset, $limit);
+            $this->validate->escapeStrings($offset, $limit);
 
-            $result = db\Database::get()->readFromDatabase(
+            $result = $this->database->readFromDatabase(
                 'app_accounts',
-                // 'user_id = "root"',
                 'user_id = \'' . $this->userId . '\'',
                 '*',
                 $limit,
@@ -113,17 +101,14 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
             $return = array();
             if (!empty($result) && \is_array($result)) {
                 foreach ($result as $key => $value) {
-                    switch ($value['type']) {
-                        case 'checking':
-                            $value['type'] = 'Girokonto';
-                            break;
-                        case 'saving':
-                            $value['type'] = 'Sparkonto';
-                            break;
-                        default:
-                            $value['type'] = '';
-                    }
-                    classes\Validate::get()->convertToGermanNumberFormat($value['balance']);
+                    $this->validate->convertToGermanNumberFormat($value['balance']);
+
+                    $this->encrypt()->decryptData(
+                        $value['description'],
+                        $value['bank'],
+                        $value['owner']
+                    );
+
                     $return[$value['id']] = $value;
 
                 }
@@ -137,20 +122,11 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
 
     public function update()
     {
-        if (!$this->validSession) {
-            die(json_encode('Unauthenticated access'));
-        }
+        $this->checkSession();
 
-        if (!isset($this->data)) {
-            die('No Data given');
-        }
+        $this->checkData();
 
-        if (is_array($this->data['data'])) {
-            $params = $this->data['data'];
-        } else {
-            $params = array();
-            parse_str($this->data['data'], $params);
-        }
+        $this->convertData($params);
 
         $insert = array();
         $insert['type'] = (isset($params['type'])) ? $params['type'] : '';
@@ -159,7 +135,7 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
         $insert['balance'] = (isset($params['balance'])) ? $params['balance'] : '';
         $insert['owner'] = (isset($params['owner'])) ? $params['owner'] : '';
 
-        classes\Validate::get()->escapeStrings(
+        $this->validate->escapeStrings(
             $insert['type'],
             $insert['description'],
             $insert['bank'],
@@ -167,9 +143,15 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
             $insert['owner']
         );
 
-        classes\Validate::get()->convertToEnglishNumberFormat($insert['balance']);
+        $this->validate->convertToEnglishNumberFormat($insert['balance']);
 
-        $return = db\Database::get()->updateDatabase(
+        $this->encrypt()->encryptData(
+            $insert['description'],
+            $insert['bank'],
+            $insert['owner']
+        );
+
+        $return = $this->database->updateDatabase(
             'app_accounts',
             $insert,
             array(
@@ -183,24 +165,15 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
 
     public function delete()
     {
-        if (!$this->validSession) {
-            die(json_encode('Unauthenticated access'));
-        }
+        $this->checkSession();
 
-        if (!isset($this->data)) {
-            die('No Data given');
-        }
+        $this->checkData();
 
-        if (is_array($this->data['data'])) {
-            $params = $this->data['data'];
-        } else {
-            $params = array();
-            parse_str($this->data['data'], $params);
-        }
+        $this->convertData($params);
 
-        classes\Validate::get()->escapeStrings($params['id']);
+        $this->validate->escapeStrings($params['id']);
 
-        $return = db\Database::get()->deleteFromDatabase(
+        $return = $this->database->deleteFromDatabase(
             'app_accounts',
             'user_id = \'' . $this->userId . '\' AND id = \'' . $params['id'] . '\''
         );

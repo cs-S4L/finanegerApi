@@ -25,7 +25,7 @@ class User extends Endpoint implements interfaces\iEndpoint
                 $this->data['surname']
             );
 
-            $validKeys = classes\Authentication::get()->validateKeys(
+            $validKeys = $this->authentication->validateKeys(
                 $this->data['api_key'],
                 $this->data['hash']
             );
@@ -59,16 +59,24 @@ class User extends Endpoint implements interfaces\iEndpoint
                 ));
             }
 
+            $encryptKey = classes\Encrypt::createUserEncryptKey(
+                "{$this->data['email']}{$this->data['password']}{$this->data['name']}{$this->data['surname']}"
+            );
+
             $userData = array(
                 'email' => $this->data['email'],
                 'password' => password_hash($this->data['password'], PASSWORD_BCRYPT),
                 'name' => $this->data['name'],
                 'surname' => $this->data['surname'],
+                'encryptKey' => $encryptKey,
             );
 
-            $result = db\Database::get()->insertIntoDatabase('users', $userData);
+            $result = db\Database::get()->insertIntoDatabase(
+                'users',
+                $userData
+            );
 
-            $result = classes\Authentication::get()->createSessionId($this->data);
+            $result = $this->authentication->createSessionId($this->data);
 
             if ($result === false) {
                 die(json_encode(

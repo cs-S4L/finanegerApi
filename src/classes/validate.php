@@ -143,6 +143,17 @@ class Validate
         $number = str_replace('.', ',', str_replace(',', '', $number));
     }
 
+    public function convertTimestampToDate(&$date)
+    {
+        // $date = date('d.m.Y', $date);
+        $date = date('Y.m.d', $date);
+    }
+
+    public function convertDateToTimestamp(&$date)
+    {
+        $date = strtotime($date);
+    }
+
     private function addError(&$errors, $errorKey, $error)
     {
         $errors[$errorKey] = $error;
