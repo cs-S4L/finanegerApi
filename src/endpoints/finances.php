@@ -42,6 +42,11 @@ class Finances extends Endpoint implements interfaces\iEndpoint
             $insert['note']
         );
 
+        $return = $this->database->insertIntoDatabase(
+            'app_finances',
+            $insert
+        );
+
         if (!empty($insert['account'])) {
             $time = time();
             if ($insert['date'] <= $time) {
@@ -54,11 +59,6 @@ class Finances extends Endpoint implements interfaces\iEndpoint
                 );
             }
         }
-
-        $return = $this->database->insertIntoDatabase(
-            'app_finances',
-            $insert
-        );
 
         die(json_encode(array('success' => $return)));
 
@@ -142,6 +142,41 @@ class Finances extends Endpoint implements interfaces\iEndpoint
 
     public function delete()
     {
+        $this->checkSession();
 
+        $this->checkData();
+
+        $this->convertData($params);
+
+        $this->validate->escapeStrings($params['id']);
+
+        $return = $this->database->deleteFromDatabase(
+            'app_finances',
+            "user_id = {$this->userId} AND id = {$params['id']}"
+            // "user_id = 910 AND id = {$params['id']}"
+        );
+
+        if ($return && !empty($params['account'])) {
+            $this->validate->convertToEnglishNumberFormat($params['amount']);
+
+            $return = $this->database->addToValueInTable(
+                'app_accounts',
+                'balance',
+                $params['amount'],
+                "user_id = $this->userId AND id = {$params['account']}",
+                ($params['type'] == 'income') ? '-' : '+'
+            );
+        }
+
+        if ($return) {
+            die(\json_encode(array('success' => true)));
+        } else {
+            die(\json_encode(
+                array(
+                    'error' => array('Error' => 'Something went wrong!'),
+                )
+            ));
+
+        }
     }
 }

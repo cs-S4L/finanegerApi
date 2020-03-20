@@ -74,14 +74,14 @@ class Database
         if (!empty($order)) {
             $statement .= " ORDER BY $order $direction";
 
-            if (!empty($offset)) {
-                $statement .= " OFFSET $offset ROWS";
-            }
         }
 
         if (!empty($limit)) {
             $statement .= " Limit $limit";
-            // die(\json_encode($statement));
+
+            if (!empty($offset)) {
+                $statement .= " OFFSET $offset";
+            }
         }
 
         $sql = $this->conn->prepare($statement);
@@ -105,9 +105,9 @@ class Database
 
         // $this->logDatabaseAccess($statement);
 
-        $sql->execute();
+        return $sql->execute();
 
-        return $sql->fetchAll($fetchMode);
+        // return $sql->fetchAll($fetchMode);
     }
 
     public function updateDatabase($table, $values, $where = null)
