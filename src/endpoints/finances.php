@@ -111,7 +111,7 @@ class Finances extends Endpoint implements interfaces\iEndpoint
                 'user_id = \'' . $this->userId . '\'',
                 '*',
                 $limit,
-                '',
+                'createDate',
                 'DESC',
                 $offset
             );
@@ -126,7 +126,7 @@ class Finances extends Endpoint implements interfaces\iEndpoint
 
                     $this->validate->convertTimestampToDate($value['date']);
                     $this->validate->convertToGermanNumberFormat($value['amount']);
-                    $return[$value['id']] = $value;
+                    $return[$key] = $value;
 
                 }
             }
