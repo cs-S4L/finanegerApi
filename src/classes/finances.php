@@ -14,7 +14,8 @@ class Finances extends AppFunctions
         $amount = '',
         $account = '',
         $date = '',
-        $note = ''
+        $note = '',
+        $fixedCost = ''
     ) {
         $this->validate->escapeStrings(
             $userId,
@@ -23,7 +24,8 @@ class Finances extends AppFunctions
             $amount,
             $account,
             $date,
-            $note
+            $note,
+            $fixedCost
         );
 
         $this->validate->convertToEnglishNumberFormat($amount);
@@ -44,6 +46,7 @@ class Finances extends AppFunctions
                 'account' => $account,
                 'date' => $date,
                 'note' => $note,
+                'fixedCost' => $fixedCost,
             )
         );
 
@@ -153,7 +156,6 @@ class Finances extends AppFunctions
         $return = $this->database->deleteFromDatabase(
             'app_finances',
             "user_id = {$userId} AND id = {$params['id']}"
-            // "user_id = 910 AND id = {$params['id']}"
         );
 
         if ($return && !empty($params['account'])) {

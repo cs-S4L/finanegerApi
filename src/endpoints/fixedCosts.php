@@ -30,9 +30,9 @@ class FixedCosts extends Endpoint implements interfaces\iEndpoint
         $insert['amount'] = (isset($params['amount'])) ? $params['amount'] : '';
         $insert['account'] = (isset($params['account'])) ? $params['account'] : '';
         $insert['note'] = (isset($params['note'])) ? $params['note'] : '';
-        $insert['startDate'] = (isset($params['startDate'])) ? $params['startDate'] : '';
         $insert['iteration'] = (isset($params['iteration'])) ? $params['iteration'] : '';
         $insert['lastValuation'] = (isset($params['lastValuation'])) ? $params['lastValuation'] : '';
+        $insert['nextValuation'] = (isset($params['nextValuation'])) ? $params['nextValuation'] : '';
 
         $this->validate->escapeStrings(
             $insert['user_id'],
@@ -41,13 +41,13 @@ class FixedCosts extends Endpoint implements interfaces\iEndpoint
             $insert['amount'],
             $insert['account'],
             $insert['note'],
-            $insert['startDate'],
             $insert['iteration'],
-            $insert['lastValuation']
+            $insert['lastValuation'],
+            $insert['nextValuation']
         );
 
         $this->validate->convertToEnglishNumberFormat($insert['amount']);
-        $this->validate->convertDateToTimestamp($insert['startDate']);
+        $this->validate->convertDateToTimestamp($insert['nextValuation']);
 
         $this->encrypt()->encryptData(
             $insert['description'],
@@ -55,7 +55,7 @@ class FixedCosts extends Endpoint implements interfaces\iEndpoint
         );
 
         $this->validate->validate(
-            'pastDate', $insert['startDate'], $errors, 'startDate'
+            'pastDate', $insert['nextValuation'], $errors, 'nextValuation'
         );
 
         if (!empty($errors)) {
@@ -69,27 +69,40 @@ class FixedCosts extends Endpoint implements interfaces\iEndpoint
         if (!empty($insert['account'])) {
             $todayTimestamp = strtotime('00:00:00');
 
-            if ($todayTimestamp == $insert['startDate']) {
+            if ($todayTimestamp == $insert['nextValuation']) {
 
-                $this->finances->createFinance(
-                    $this->userId,
-                    date("d.m.Y") . ' Fixkostenpunkt: ' . $params['description'],
-                    $params['type'],
-                    $params['amount'],
-                    $params['account'],
-                    $params['startDate'],
-                    $params['note']
-                );
+                $insert['lastValuation'] = $insert['nextValuation'];
+                if ($insert['iteration'] == "weekly") {
+                    $insert['nextValuation'] = strtotime('00:00:00 +1 week');
 
-                $insert['lastValuation'] = $insert['startDate'];
+                } else {
+                    $insert['nextValuation'] = strtotime('00:00:00 +1 month');
+                    // $insert['nextValuation'] = strtotime(date('Y-m-d', strtotime("+30 days")));
+                }
             }
         }
 
+        $test = '25.04.2020';
+        $this->validate->convertDateToTimestamp($test);
+
         $return = $this->database->insertIntoDatabase(
             'app_fixedCosts',
-            $insert
+            $insert,
+            $lastInsertId
         );
 
+        if (!empty($insert['account'])) {
+            $this->finances->createFinance(
+                $this->userId,
+                date("d.m.Y") . ' Fixkostenpunkt: ' . $params['description'],
+                $params['type'],
+                $params['amount'],
+                $params['account'],
+                $params['nextValuation'],
+                $params['note'],
+                $lastInsertId
+            );
+        }
         die(json_encode(array('success' => $return)));
     }
 
@@ -126,8 +139,8 @@ class FixedCosts extends Endpoint implements interfaces\iEndpoint
 
                 );
 
-                $this->validate->convertTimestampToDate($return['success']['startDate']);
                 $this->validate->convertTimestampToDate($return['success']['lastValuation']);
+                $this->validate->convertTimestampToDate($return['success']['nextValuation']);
                 $this->validate->convertToGermanNumberFormat($return['success']['amount']);
             }
 
@@ -158,9 +171,8 @@ class FixedCosts extends Endpoint implements interfaces\iEndpoint
                         $value['note']
                     );
 
-                    $this->validate->convertTimestampToDate($value['startDate']);
-                    // $this->validate->convertTimestampToDate($value['createDate']);
                     $this->validate->convertTimestampToDate($value['lastValuation']);
+                    $this->validate->convertTimestampToDate($value['nextValuation']);
                     $this->validate->convertToGermanNumberFormat($value['amount']);
                     $return[$key] = $value;
 
@@ -174,11 +186,169 @@ class FixedCosts extends Endpoint implements interfaces\iEndpoint
 
     public function update()
     {
+        $this->checkSession();
 
+        $this->checkData();
+
+        $this->convertData($params);
+
+        $insert['description'] = (isset($params['description'])) ? $params['description'] : '';
+        $insert['type'] = (isset($params['type'])) ? $params['type'] : '';
+        $insert['amount'] = (isset($params['amount'])) ? $params['amount'] : '';
+        $insert['account'] = (isset($params['account'])) ? $params['account'] : '';
+        $insert['note'] = (isset($params['note'])) ? $params['note'] : '';
+        $insert['iteration'] = (isset($params['iteration'])) ? $params['iteration'] : '';
+        // $insert['lastValuation'] = (isset($params['lastValuation'])) ? $params['lastValuation'] : '';
+        $insert['nextValuation'] = (isset($params['nextValuation'])) ? $params['nextValuation'] : '';
+
+        $this->validate->escapeStrings(
+            $insert['description'],
+            $insert['type'],
+            $insert['amount'],
+            $insert['account'],
+            $insert['note'],
+            $insert['iteration']
+        );
+
+        $this->validate->convertToEnglishNumberFormat($insert['amount']);
+        $this->validate->convertDateToTimestamp($insert['nextValuation']);
+
+        $this->encrypt()->encryptData(
+            $insert['description'],
+            $insert['note']
+        );
+
+        $this->validate->validate(
+            'pastDate', $insert['nextValuation'], $errors, 'nextValuation'
+        );
+
+        if (!empty($errors)) {
+            die(\json_encode(
+                array(
+                    'error' => $errors,
+                )
+            ));
+        }
+
+        $dbDataset = $this->database->readFromDatabase(
+            'app_fixedCosts',
+            "user_id = '$this->userId' AND id = '{$params['id']}'"
+        );
+
+        $dbDataset = $dbDataset[0];
+
+        //wiederholrate wurde geändert
+        if ($dbDataset['iteration'] != $insert['iteration']) {
+            //Nächste Wertstellung wurde nicht geändert
+            if ($dbDataset['nextValuation'] == $insert['nextValuation']) {
+                if ($insert['iteration'] == "weekly") {
+                    $insert['nextValuation'] = strtotime('00:00:00 +1 week');
+                } else {
+                    $insert['nextValuation'] = strtotime('00:00:00 +1 month');
+                }
+                //Nächste Wertstellung wurde geändert
+            } else {
+                //prüfen ob neue Wertstellung heute ist, Wenn ja passende Finance anlegen
+                $todayTimestamp = strtotime('00:00:00');
+
+                if ($todayTimestamp == $insert['nextValuation']) {
+
+                    $insert['lastValuation'] = $insert['nextValuation'];
+                    if ($insert['iteration'] == "weekly") {
+                        $insert['nextValuation'] = strtotime('00:00:00 +1 week');
+                    } else {
+                        $insert['nextValuation'] = strtotime('00:00:00 +1 month');
+                    }
+
+                    $this->finances->createFinance(
+                        $this->userId,
+                        date("d.m.Y") . ' Fixkostenpunkt: ' . $params['description'],
+                        $params['type'],
+                        $params['amount'],
+                        $params['account'],
+                        $params['nextValuation'],
+                        $params['note'],
+                        $params['id']
+                    );
+
+                }
+            } //else
+        } else {
+            //Nächste Wertstellung wurde geändert
+            if ($dbDataset['nextValuation'] != $insert['nextValuation']) {
+                //prüfen ob neue Wertstellung heute ist, Wenn ja passende Finance anlegen6
+                $todayTimestamp = strtotime('00:00:00');
+
+                if ($todayTimestamp == $insert['nextValuation']) {
+
+                    $insert['lastValuation'] = $insert['nextValuation'];
+                    if ($insert['iteration'] == "weekly") {
+                        $insert['nextValuation'] = strtotime('+1 week');
+                    } else {
+                        $insert['nextValuation'] = strtotime('+1 month');
+                    }
+
+                    $this->finances->createFinance(
+                        $this->userId,
+                        date("d.m.Y") . ' Fixkostenpunkt: ' . $params['description'],
+                        $params['type'],
+                        $params['amount'],
+                        $params['account'],
+                        $params['nextValuation'],
+                        $params['note'],
+                        $params['id']
+                    );
+
+                } // if ($todayTimestamp == $insert['nextValuation']) {
+
+            }
+        } //if ($dbDataset['iteration'] != $insert['iteration']) {
+
+        $return = $this->database->updateDatabase(
+            'app_fixedCosts',
+            $insert,
+            array(
+                'user_id' => $this->userId,
+                'id' => $params['id'],
+            )
+        );
+
+        if ($return) {
+            die(\json_encode(array('success' => true)));
+        } else {
+            die(\json_encode(
+                array(
+                    'error' => array('Error' => 'Something went wrong!'),
+                )
+            ));
+        }
     }
 
     public function delete()
     {
+        $this->checkSession();
+
+        $this->checkData();
+
+        $this->convertData($params);
+
+        $this->validate->escapeStrings($params['id']);
+
+        $return = $this->database->deleteFromDatabase(
+            'app_fixedCosts',
+            "user_id = {$this->userId} AND id = {$params['id']}"
+        );
+
+        if ($return) {
+            die(\json_encode(array('success' => true)));
+        } else {
+            die(\json_encode(
+                array(
+                    'error' => array('Error' => 'Something went wrong!'),
+                )
+            ));
+
+        }
 
     }
 

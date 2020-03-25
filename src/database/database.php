@@ -30,7 +30,7 @@ class Database
         return $database_object;
     }
 
-    public function insertIntoDatabase($table, $data)
+    public function insertIntoDatabase($table, $data, &$lastInsertId = '')
     {
         $fields = "";
         $params = "";
@@ -51,7 +51,9 @@ class Database
             $sql->bindParam(":$key", $value);
         }
 
-        return $sql->execute();
+        $return = $sql->execute();
+        $lastInsertId = $this->conn->lastInsertId();
+        return $return;
     }
 
     public function readFromDatabase(
