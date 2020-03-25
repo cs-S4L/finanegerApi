@@ -3,54 +3,67 @@ namespace src\endpoints;
 
 use src\interfaces;
 
-class Bills implements interfaces\iEndpoint {
+class Bills extends Endpoint implements interfaces\iEndpoint
+{
 
-	public function set($data) {
+    protected $finances;
 
-	}
+    public function __construct($data)
+    {
+        parent::__construct($data);
 
-	public function get($data) {
-		//return just one if data.id is set
-		if (is_null($data)) {
-			//check for User in Session
-			echo ('test');
-		} else {
-			//check credentials
-		}
-	
-		$return = array(
-			'id1' => array(
-				'dueDate'=> 'left bla blub',
-				'description'=> 'bla blub',
-				'amount'=> 'number',
-			),
-			'id2' => array(
-				'dueDate'=> 'left',
-				'description'=> 'bla blub',
-				'amount'=> 'number'
-	
-			),
-			
-		);
-	
-		// $return = {
-		//     'id1' => {
-		//     },
-		//     ),
-		// };
-	
-		echo json_encode($return);
-		die();
+        $this->finances = new classes\Finances($this->encrypt());
+    }
 
-	}
-	
-	public function update($data) {
-		
-	}
-	
-	public function delete($data) {
-		
-	}
-	
+    public function set()
+    {
+
+    }
+
+    public function get()
+    {
+        //return just one if data.id is set
+        if (is_null($this->data)) {
+            //check for User in Session
+            echo ('test');
+        } else {
+            //check credentials
+        }
+
+        $return = array(
+            'id1' => array(
+                'dueDate' => '20.04.2020',
+                'description' => 'bla blub',
+                'amount' => 'number',
+            ),
+            'id2' => array(
+                'dueDate' => '20.04.2020',
+                'description' => 'bla blub',
+                'amount' => 'number',
+
+            ),
+
+        );
+
+        // $return = {
+        //     'id1' => {
+        //     },
+        //     ),
+        // };
+
+        echo json_encode($return);
+        die();
+
+    }
+
+    public function update()
+    {
+
+    }
+
+    public function delete()
+    {
+
+    }
+
 }
-
