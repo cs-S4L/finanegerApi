@@ -93,8 +93,11 @@ class Database
         return $sql->fetchAll($fetchMode);
     }
 
-    public function deleteFromDatabase($table, $where = null, $fetchMode = \PDO::FETCH_ASSOC)
-    {
+    public function deleteFromDatabase(
+        $table,
+        $where = null,
+        $fetchMode = \PDO::FETCH_ASSOC
+    ) {
         $statement = "";
         if (is_null($where)) {
             return false;
@@ -110,8 +113,11 @@ class Database
         // return $sql->fetchAll($fetchMode);
     }
 
-    public function updateDatabase($table, $values, $where = null)
-    {
+    public function updateDatabase(
+        $table,
+        $values,
+        $where = null
+    ) {
         $statement = "";
         $hasWhere = !is_null($where);
 
@@ -156,8 +162,13 @@ class Database
         return $sql->execute();
     }
 
-    public function addToValueInTable($table, $row, $value, $where = null, $operator = '+')
-    {
+    public function addToValueInTable(
+        $table,
+        $row,
+        $value,
+        $where = null,
+        $operator = '+'
+    ) {
         if (!is_null($where)) {
             $statement = "UPDATE $table SET $row = $row $operator $value WHERE $where";
         } else {

@@ -30,9 +30,9 @@ switch ($endpoint) {
     case 'Accounts':
         $endpointController = new src\endpoints\Accounts($_POST);
         break;
-    // case 'FixedCosts':
-    //     $endpointController = new src\endpoints\FixedCosts($_POST);
-    //     break;
+    case 'FixedCosts':
+        $endpointController = new src\endpoints\FixedCosts($_POST);
+        break;
     default:
         break;
 }

@@ -8,6 +8,15 @@ use src\database as db;
 class Finances extends Endpoint implements interfaces\iEndpoint
 {
 
+    protected $finances;
+
+    public function __construct($data)
+    {
+        parent::__construct($data);
+
+        $this->finances = new classes\Finances($this->encrypt());
+    }
+
     public function set()
     {
         $this->checkSession();
@@ -16,53 +25,19 @@ class Finances extends Endpoint implements interfaces\iEndpoint
 
         $this->convertData($params);
 
-        $insert['user_id'] = $this->userId;
-        $insert['description'] = (isset($params['description'])) ? $params['description'] : '';
-        $insert['type'] = (isset($params['type'])) ? $params['type'] : '';
-        $insert['amount'] = (isset($params['amount'])) ? $params['amount'] : '';
-        $insert['account'] = (isset($params['account'])) ? $params['account'] : '';
-        $insert['date'] = (isset($params['date'])) ? $params['date'] : '';
-        $insert['note'] = (isset($params['note'])) ? $params['note'] : '';
-
-        $this->validate->escapeStrings(
-            $insert['user_id'],
-            $insert['description'],
-            $insert['type'],
-            $insert['amount'],
-            $insert['account'],
-            $insert['date'],
-            $insert['note']
+        $success = $this->finances->createFinance(
+            $this->userId,
+            $params['description'],
+            $params['type'],
+            $params['amount'],
+            $params['account'],
+            $params['date'],
+            $params['note']
         );
 
-        $this->validate->convertToEnglishNumberFormat($insert['amount']);
-        $this->validate->convertDateToTimestamp($insert['date']);
+        die(json_encode(array('success' => $success)));
 
-        $this->encrypt()->encryptData(
-            $insert['description'],
-            $insert['note']
-        );
-
-        $return = $this->database->insertIntoDatabase(
-            'app_finances',
-            $insert
-        );
-
-        if (!empty($insert['account'])) {
-            $time = time();
-            if ($insert['date'] <= $time) {
-                $sucess = $this->database->addToValueInTable(
-                    'app_accounts',
-                    'balance',
-                    $insert['amount'],
-                    "user_id = $this->userId AND id = {$insert['account']}",
-                    ($insert['type'] == 'income') ? '+' : '-'
-                );
-            }
-        }
-
-        die(json_encode(array('success' => $return)));
-
-    }
+    } //set
 
     public function get()
     {
@@ -133,12 +108,24 @@ class Finances extends Endpoint implements interfaces\iEndpoint
         } //if (isset($this->data['id'])) {
 
         die(json_encode($return));
-    }
+    } //get()
 
     public function update()
     {
+        $this->checkSession();
 
-    }
+        $this->checkData();
+
+        $this->convertData($params);
+
+        $return = $this->finances->updateFinance(
+            $this->userId,
+            $params
+        );
+
+        die(json_encode(array('success' => true)));
+
+    } //update
 
     public function delete()
     {
@@ -148,25 +135,7 @@ class Finances extends Endpoint implements interfaces\iEndpoint
 
         $this->convertData($params);
 
-        $this->validate->escapeStrings($params['id']);
-
-        $return = $this->database->deleteFromDatabase(
-            'app_finances',
-            "user_id = {$this->userId} AND id = {$params['id']}"
-            // "user_id = 910 AND id = {$params['id']}"
-        );
-
-        if ($return && !empty($params['account'])) {
-            $this->validate->convertToEnglishNumberFormat($params['amount']);
-
-            $return = $this->database->addToValueInTable(
-                'app_accounts',
-                'balance',
-                $params['amount'],
-                "user_id = $this->userId AND id = {$params['account']}",
-                ($params['type'] == 'income') ? '-' : '+'
-            );
-        }
+        $return = $this->finances->deleteFinance($this->userId, $params);
 
         if ($return) {
             die(\json_encode(array('success' => true)));
@@ -178,5 +147,5 @@ class Finances extends Endpoint implements interfaces\iEndpoint
             ));
 
         }
-    }
+    } //delete
 }

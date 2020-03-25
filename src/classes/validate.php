@@ -102,6 +102,16 @@ class Validate
                     );
                 }
                 break;
+            case 'pastDate':
+                $todayTimestamp = strtotime('00:00:00');
+                if ($value < $todayTimestamp) {
+                    $this->addError(
+                        $errors,
+                        $errorKey,
+                        'Datum kann nicht in der Vergangenheit liegen!'
+                    );
+                }
+                break;
             default:
                 if (empty($value)) {
                     $this->addError(

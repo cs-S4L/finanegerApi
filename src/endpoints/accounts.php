@@ -109,7 +109,7 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
                         $value['owner']
                     );
 
-                    $return[$value['id']] = $value;
+                    $return[$key] = $value;
 
                 }
             }
