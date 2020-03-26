@@ -2,9 +2,18 @@
 namespace src\endpoints;
 
 use src\interfaces;
+use src\appfunctions as appfunctions;
 
 class Accounts extends Endpoint implements interfaces\iEndpoint
 {
+    protected $accounts;
+
+    public function __construct($data)
+    {
+        parent::__construct($data);
+
+        $this->accounts = new appfunctions\Accounts($this->userId);
+    }
 
     public function set()
     {
@@ -14,34 +23,20 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
 
         $this->convertData($params);
 
-        $insert = array();
-        $insert['user_id'] = $this->userId;
-        $insert['type'] = (isset($params['type'])) ? $params['type'] : '';
-        $insert['description'] = (isset($params['description'])) ? $params['description'] : '';
-        $insert['bank'] = (isset($params['bank'])) ? $params['bank'] : '';
-        $insert['balance'] = (isset($params['balance'])) ? $params['balance'] : '';
-        $insert['owner'] = (isset($params['owner'])) ? $params['owner'] : '';
-
         $this->validate->escapeStrings(
-            $insert['user_id'],
-            $insert['type'],
-            $insert['description'],
-            $insert['bank'],
-            $insert['balance'],
-            $insert['owner']
+            $params['description'],
+            $params['type'],
+            $params['bank'],
+            $params['balance'],
+            $params['owner']
         );
 
-        $this->validate->convertToEnglishNumberFormat($insert['balance']);
-
-        $this->encrypt()->encryptData(
-            $insert['description'],
-            $insert['bank'],
-            $insert['owner']
-        );
-
-        $return = $this->database->insertIntoDatabase(
-            'app_accounts',
-            $insert
+        $this->accounts->createAccount(
+            $params['description'],
+            $params['type'],
+            $params['bank'],
+            $params['balance'],
+            $params['owner']
         );
 
         die(json_encode(array('success' => true)));
@@ -57,64 +52,19 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
         if (isset($this->data['id'])) {
             $this->validate->escapeStrings($this->data['id']);
 
-            $result = $this->database->readFromDatabase(
-                'app_accounts',
-                'user_id = \'' . $this->userId . '\' AND id = ' . $this->data['id']
-            );
+            $return = $this->accounts->getAccount($this->data['id']);
 
-            $return = array(
-                'item' => array(),
-            );
-
-            if (!empty($result)
-                && isset($result[0])
-                && count($result)
-            ) {
-                $return['item'] = $result[0];
-
-                $this->encrypt()->decryptData(
-                    $return['item']['description'],
-                    $return['item']['bank'],
-                    $return['item']['owner']
-                );
-
-                $this->validate->convertToGermanNumberFormat($return['item']['balance']);
-            }
             die(\json_encode($return));
-
         } else {
-            $offset = (isset($this->data['offset']) && !empty($this->data['offset'])) ? $this->data['offset'] : '';
-            $limit = (isset($this->data['limit']) && !empty($this->data['limit'])) ? $this->data['limit'] : '';
-
-            $this->validate->escapeStrings($offset, $limit);
-
-            $result = $this->database->readFromDatabase(
-                'app_accounts',
-                'user_id = \'' . $this->userId . '\'',
-                '*',
-                $limit,
-                'createDate',
-                'DESC',
-                $offset
+            $this->validate->escapeStrings(
+                $this->data['offset'],
+                $this->data['limit']
             );
 
-            $return = array();
-            if (!empty($result) && \is_array($result)) {
-                foreach ($result as $key => $value) {
-                    $this->validate->convertToGermanNumberFormat($value['balance']);
-
-                    $this->encrypt()->decryptData(
-                        $value['description'],
-                        $value['bank'],
-                        $value['owner']
-                    );
-
-                    $return[$key] = $value;
-
-                }
-            }
-
-            // $return['balance'] = \str_replace('.', ',', $return['balance']);
+            $return = $this->accounts->getAccounts(
+                $this->data['offset'],
+                $this->data['limit']
+            );
 
             die(\json_encode($return));
         }
@@ -128,36 +78,22 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
 
         $this->convertData($params);
 
-        $insert = array();
-        $insert['type'] = (isset($params['type'])) ? $params['type'] : '';
-        $insert['description'] = (isset($params['description'])) ? $params['description'] : '';
-        $insert['bank'] = (isset($params['bank'])) ? $params['bank'] : '';
-        $insert['balance'] = (isset($params['balance'])) ? $params['balance'] : '';
-        $insert['owner'] = (isset($params['owner'])) ? $params['owner'] : '';
-
         $this->validate->escapeStrings(
-            $insert['type'],
-            $insert['description'],
-            $insert['bank'],
-            $insert['balance'],
-            $insert['owner']
+            $params['id'],
+            $params['description'],
+            $params['type'],
+            $params['bank'],
+            $params['balance'],
+            $params['owner']
         );
 
-        $this->validate->convertToEnglishNumberFormat($insert['balance']);
-
-        $this->encrypt()->encryptData(
-            $insert['description'],
-            $insert['bank'],
-            $insert['owner']
-        );
-
-        $return = $this->database->updateDatabase(
-            'app_accounts',
-            $insert,
-            array(
-                'user_id' => $this->userId,
-                'id' => $params['id'],
-            )
+        $return = $this->accounts->updateAccount(
+            $params['id'],
+            $params['description'],
+            $params['type'],
+            $params['bank'],
+            $params['balance'],
+            $params['owner']
         );
 
         die(json_encode(array('success' => true)));

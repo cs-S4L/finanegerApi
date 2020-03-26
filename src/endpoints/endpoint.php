@@ -48,17 +48,6 @@ abstract class Endpoint
         }
     }
 
-    protected function encrypt()
-    {
-        static $encryptObject = null;
-
-        if (is_null($encryptObject)) {
-            $encryptObject = new classes\Encrypt($this->userId);
-        }
-
-        return $encryptObject;
-    }
-
     protected function checkSession()
     {
         if (!$this->validSession) {

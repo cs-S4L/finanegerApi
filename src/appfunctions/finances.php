@@ -1,14 +1,71 @@
 <?php
-namespace src\classes;
-
-// use src\interfaces;
-// use src\endpoints as endpoints;
-use src\database as db;
+namespace src\appfunctions;
 
 class Finances extends AppFunctions
 {
+
+    public function getFinances($offset = '', $limit = '')
+    {
+        $result = $this->database->readFromDatabase(
+            'app_finances',
+            'user_id = \'' . $this->userId . '\'',
+            '*',
+            $limit,
+            'createDate',
+            'DESC',
+            $offset
+        );
+
+        $return = array();
+        if (!empty($result) && \is_array($result)) {
+            foreach ($result as $key => $value) {
+                $this->encrypt()->decryptData(
+                    $value['description'],
+                    $value['note']
+                );
+
+                $this->validate->convertTimestampToDate($value['date']);
+                $this->validate->convertToGermanNumberFormat($value['amount']);
+                $return[$key] = $value;
+
+            }
+        }
+
+        return $return;
+    }
+
+    public function getFinance($id)
+    {
+        $return = array(
+            'success' => array(),
+        );
+
+        $result = $this->database->readFromDatabase(
+            'app_finances',
+            "user_id = '$this->userId' AND id = '{$id}'"
+        );
+
+        if (!empty($result)
+            && isset($result[0])
+            && count($result)
+        ) {
+            $return['success'] = $result[0];
+
+            $this->encrypt()->decryptData(
+                $return['success']['description'],
+                $return['success']['note']
+            );
+
+            $this->validate->convertTimestampToDate($return['success']['date']);
+            $this->validate->convertToGermanNumberFormat($return['success']['amount']);
+
+        }
+
+        return $return;
+
+    }
+
     public function createFinance(
-        $userId,
         $description = '',
         $type = '',
         $amount = '',
@@ -17,21 +74,10 @@ class Finances extends AppFunctions
         $note = '',
         $fixedCost = ''
     ) {
-        $this->validate->escapeStrings(
-            $userId,
-            $description,
-            $type,
-            $amount,
-            $account,
-            $date,
-            $note,
-            $fixedCost
-        );
-
         $this->validate->convertToEnglishNumberFormat($amount);
         $this->validate->convertDateToTimestamp($date);
 
-        $this->encrypt->encryptData(
+        $this->encrypt()->encryptData(
             $description,
             $note
         );
@@ -39,7 +85,7 @@ class Finances extends AppFunctions
         $success = $this->database->insertIntoDatabase(
             'app_finances',
             array(
-                'user_id' => $userId,
+                'user_id' => $this->userId,
                 'description' => $description,
                 'type' => $type,
                 'amount' => $amount,
@@ -58,7 +104,7 @@ class Finances extends AppFunctions
                     'app_accounts',
                     'balance',
                     $amount,
-                    "user_id = $userId AND id = $account",
+                    "user_id = {$this->userId} AND id = $account",
                     ($type == 'income') ? '+' : '-'
                 );
             }
@@ -70,7 +116,6 @@ class Finances extends AppFunctions
     public function updateFinance($userId, $params)
     {
         $insert = array();
-        // $insert['id'] = (isset($params['id'])) ? $params['id'] : '';
         $insert['description'] = (isset($params['description'])) ? $params['description'] : '';
         $insert['type'] = (isset($params['type'])) ? $params['type'] : '';
         $insert['amount'] = (isset($params['amount'])) ? $params['amount'] : '';
@@ -78,27 +123,16 @@ class Finances extends AppFunctions
         $insert['date'] = (isset($params['date'])) ? $params['date'] : '';
         $insert['note'] = (isset($params['note'])) ? $params['note'] : '';
 
-        $this->validate->escapeStrings(
-            // $insert['id'],
-            $insert['description'],
-            $insert['type'],
-            $insert['amount'],
-            $insert['account'],
-            $insert['date'],
-            $insert['note']
-        );
-
         $this->validate->convertToEnglishNumberFormat($insert['amount']);
         $this->validate->convertDateToTimestamp($insert['date']);
 
-        $this->encrypt->encryptData(
+        $this->encrypt()->encryptData(
             $insert['description'],
             $insert['note']
         );
 
         $dbDataset = $this->database->readFromDatabase(
             'app_finances',
-            // 'user_id = \'' . $this->userId . '\' AND id = \'' . $this->data['id'] . '\'',
             "user_id = '$userId' AND id = '{$params['id']}'"
         );
 
@@ -151,8 +185,6 @@ class Finances extends AppFunctions
 
     public function deleteFinance($userId, $params)
     {
-        $this->validate->escapeStrings($params['id']);
-
         $return = $this->database->deleteFromDatabase(
             'app_finances',
             "user_id = {$userId} AND id = {$params['id']}"

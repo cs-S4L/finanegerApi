@@ -2,8 +2,7 @@
 namespace src\endpoints;
 
 use src\interfaces;
-use src\classes as classes;
-use src\database as db;
+use src\appfunctions as appfunctions;
 
 class Finances extends Endpoint implements interfaces\iEndpoint
 {
@@ -14,7 +13,7 @@ class Finances extends Endpoint implements interfaces\iEndpoint
     {
         parent::__construct($data);
 
-        $this->finances = new classes\Finances($this->encrypt());
+        $this->finances = new appfunctions\Finances($this->userId);
     }
 
     public function set()
@@ -25,8 +24,16 @@ class Finances extends Endpoint implements interfaces\iEndpoint
 
         $this->convertData($params);
 
+        $this->validate->escapeStrings(
+            $params['description'],
+            $params['type'],
+            $params['amount'],
+            $params['account'],
+            $params['date'],
+            $params['note']
+        );
+
         $success = $this->finances->createFinance(
-            $this->userId,
             $params['description'],
             $params['type'],
             $params['amount'],
@@ -47,64 +54,22 @@ class Finances extends Endpoint implements interfaces\iEndpoint
 
         // wenn id gesetzt ist, einzelnen Eintrag zurück geben
         if (isset($this->data['id'])) {
-            $return = array(
-                'success' => array(),
+            $this->validate->escapeStrings(
+                $this->data['id']
             );
 
-            $result = $this->database->readFromDatabase(
-                'app_finances',
-                // 'user_id = \'' . $this->userId . '\' AND id = \'' . $this->data['id'] . '\'',
-                "user_id = '$this->userId' AND id = '{$this->data['id']}'"
-            );
-
-            if (!empty($result)
-                && isset($result[0])
-                && count($result)
-            ) {
-                $return['success'] = $result[0];
-
-                $this->encrypt()->decryptData(
-                    $return['success']['description'],
-                    $return['success']['note']
-                );
-
-                $this->validate->convertTimestampToDate($return['success']['date']);
-                $this->validate->convertToGermanNumberFormat($return['success']['amount']);
-
-            }
-
-            die(\json_encode($return));
-
+            $return = $this->finances->getFinance($this->data['id']);
         } else {
-            $offset = (isset($this->data['offset']) && !empty($this->data['offset'])) ? $this->data['offset'] : '';
-            $limit = (isset($this->data['limit']) && !empty($this->data['limit'])) ? $this->data['limit'] : '';
-
-            $this->validate->escapeStrings($offset, $limit);
-
-            $result = $this->database->readFromDatabase(
-                'app_finances',
-                'user_id = \'' . $this->userId . '\'',
-                '*',
-                $limit,
-                'createDate',
-                'DESC',
-                $offset
+            $this->validate->escapeStrings(
+                $this->data['offset'],
+                $this->data['limit']
             );
 
-            $return = array();
-            if (!empty($result) && \is_array($result)) {
-                foreach ($result as $key => $value) {
-                    $this->encrypt()->decryptData(
-                        $value['description'],
-                        $value['note']
-                    );
+            $return = $this->finances->getFinances(
+                $this->data['offset'],
+                $this->data['limit']
+            );
 
-                    $this->validate->convertTimestampToDate($value['date']);
-                    $this->validate->convertToGermanNumberFormat($value['amount']);
-                    $return[$key] = $value;
-
-                }
-            }
         } //if (isset($this->data['id'])) {
 
         die(json_encode($return));
@@ -117,6 +82,15 @@ class Finances extends Endpoint implements interfaces\iEndpoint
         $this->checkData();
 
         $this->convertData($params);
+
+        $this->validate->escapeStrings(
+            $params['description'],
+            $params['type'],
+            $params['amount'],
+            $params['account'],
+            $params['date'],
+            $params['note']
+        );
 
         $return = $this->finances->updateFinance(
             $this->userId,
@@ -134,6 +108,16 @@ class Finances extends Endpoint implements interfaces\iEndpoint
         $this->checkData();
 
         $this->convertData($params);
+
+        $this->validate->escapeStrings(
+            $params['id'],
+            $params['description'],
+            $params['type'],
+            $params['amount'],
+            $params['account'],
+            $params['date'],
+            $params['note']
+        );
 
         $return = $this->finances->deleteFinance($this->userId, $params);
 
