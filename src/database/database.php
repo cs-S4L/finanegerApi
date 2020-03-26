@@ -14,6 +14,8 @@ class Database
             $dsn = "mysql:host={$cfg['db']["host"]};dbname={$cfg['db']["name"]};charset=utf8mb4;port={$cfg['db']["port"]}";
 
             $this->conn = new \PDO($dsn, $cfg['db']["user"], $cfg['db']["password"], array(\PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+00:00'"));
+            $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $this->conn->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         } catch (\PDOException $e) {
             die("Connection failed: " . $e->getMessage());
         }
@@ -30,7 +32,7 @@ class Database
         return $database_object;
     }
 
-    public function insertIntoDatabase($table, $data, &$lastInsertId = '')
+    public function insertIntoDatabase($table, $data, &$lastInsertId = '', &$error = '')
     {
         $fields = "";
         $params = "";
@@ -51,8 +53,12 @@ class Database
             $sql->bindParam(":$key", $value);
         }
 
-        $return = $sql->execute();
-        $lastInsertId = $this->conn->lastInsertId();
+        try {
+            $return = $sql->execute();
+            $lastInsertId = $this->conn->lastInsertId();
+        } catch (Exception $e) {
+            $error = $e->getMessage();
+        }
         return $return;
     }
 

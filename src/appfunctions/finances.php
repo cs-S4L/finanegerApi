@@ -62,7 +62,6 @@ class Finances extends AppFunctions
         }
 
         return $return;
-
     }
 
     public function createFinance(
@@ -72,10 +71,13 @@ class Finances extends AppFunctions
         $account = '',
         $date = '',
         $note = '',
-        $fixedCost = ''
+        $fixedCost = 0,
+        $bill = 0
     ) {
         $this->validate->convertToEnglishNumberFormat($amount);
-        $this->validate->convertDateToTimestamp($date);
+        if (!is_int($date)) {
+            $this->validate->convertDateToTimestamp($date);
+        }
 
         $this->encrypt()->encryptData(
             $description,
@@ -89,10 +91,11 @@ class Finances extends AppFunctions
                 'description' => $description,
                 'type' => $type,
                 'amount' => $amount,
-                'account' => $account,
+                'account' => (!empty($account)) ? $account : 0,
                 'date' => $date,
                 'note' => $note,
                 'fixedCost' => $fixedCost,
+                'bill' => $bill,
             )
         );
 

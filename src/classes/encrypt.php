@@ -16,9 +16,6 @@ class Encrypt
     {
         $this->database = db\Database::get();
 
-        // $this->iv_size = \mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
-        // $this->iv = mcrypt_create_iv($this->iv_size, MCRYPT_RAND);
-
         $this->encryptKey = $this->getUserEncryptKey($userId);
     }
 
@@ -37,24 +34,6 @@ class Encrypt
                 0,
                 $encIv
             ) . "::" . bin2hex($encIv);
-
-            // $cipher_method = 'aes-128-ctr';
-            // $enc_key = openssl_digest(php_uname(), 'SHA256', true);
-            // $enc_iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($cipher_method));
-            // $crypted_token = openssl_encrypt($token, $cipher_method, $enc_key, 0, $enc_iv) . "::" . bin2hex($enc_iv);
-
-            // openssl_private_encrypt(
-            //     $value,
-            //     $args[$key],
-            //     openssl_pkey_get_private($this->encryptKey)
-            // );
-            // $args[$key] = mcrypt_encrypt(
-            //     MCRYPT_RIJNDAEL_256,
-            //     $this->encryptKey,
-            //     $value,
-            //     MCRYPT_MODE_ECB,
-            //     $this->iv
-            // );
         }
     }
 
@@ -71,19 +50,6 @@ class Encrypt
                 0,
                 hex2bin($encIv)
             );
-
-            // openssl_private_decrypt(
-            //     $value,
-            //     $args[$key],
-            //     openssl_pkey_get_private($this->encryptKey)
-            // );
-            // $args[$key] = mcrypt_decrypt(
-            //     MCRYPT_RIJNDAEL_256,
-            //     $this->encryptKey,
-            //     $value,
-            //     MCRYPT_MODE_ECB,
-            //     $this->iv
-            // );
         }
     }
 
@@ -96,7 +62,7 @@ class Encrypt
     {
         $result = $this->database->readFromDatabase(
             'users',
-            "user_id = $userId"
+            "id = $userId"
         );
 
         if (empty($result)
@@ -105,6 +71,6 @@ class Encrypt
             return false;
         }
 
-        return $result[0];
+        return $result[0]['encryptKey'];
     }
 }
