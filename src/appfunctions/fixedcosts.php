@@ -140,7 +140,7 @@ class FixedCosts extends AppFunctions
 
         if (!empty($insert['account'])) {
             $this->finances->createFinance(
-                date("d.m.Y") . ' Fixkostenpunkt: ' . $description,
+                'Fixkostenpunkt: ' . $description,
                 $type,
                 $amount,
                 $account,
@@ -216,7 +216,7 @@ class FixedCosts extends AppFunctions
 
                     $this->finances->createFinance(
                         $this->userId,
-                        date("d.m.Y") . ' Fixkostenpunkt: ' . $params['description'],
+                        'Fixkostenpunkt: ' . $params['description'],
                         $params['type'],
                         $params['amount'],
                         $params['account'],
@@ -244,7 +244,7 @@ class FixedCosts extends AppFunctions
 
                     $this->finances->createFinance(
                         $this->userId,
-                        date("d.m.Y") . ' Fixkostenpunkt: ' . $params['description'],
+                        'Fixkostenpunkt: ' . $params['description'],
                         $params['type'],
                         $params['amount'],
                         $params['account'],

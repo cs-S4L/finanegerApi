@@ -49,6 +49,8 @@ class Authentication
 
     public function validateKeys($api_key, $hash)
     {
+        $this->clearKeys();
+
         $validKeys = true;
         $auth_key = $this->database->readFromDatabase(
             'auth_keys',
@@ -79,6 +81,15 @@ class Authentication
         //     'api_key = "' . $api_key . '"'
         // );
         return $validKeys;
+    }
+
+    public function clearKeys()
+    {
+        $time = time() - 1;
+        return $this->database->deleteFromDatabase(
+            'auth_keys',
+            "expireDate < $time"
+        );
     }
 
     public function createSessionId($data)
@@ -164,7 +175,7 @@ class Authentication
 
     private function createRandomKey()
     {
-        return md5(bin2hex(random_bytes(64)) . time());
+        return \hash('sha256', bin2hex(random_bytes(64)) . time());
     }
 
     private function createUniqueSessionId($user)
