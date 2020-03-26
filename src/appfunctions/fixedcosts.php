@@ -77,14 +77,14 @@ class FixedCosts extends AppFunctions
     }
 
     public function createFixedCost(
-        $description,
-        $type,
-        $amount,
-        $account,
-        $note,
-        $iteration,
-        $lastValuation,
-        $nextValuation
+        $description = '',
+        $type = '',
+        $amount = 0,
+        $account = 0,
+        $note = '',
+        $iteration = '',
+        $lastValuation = 0,
+        $nextValuation = 0
     ) {
         $insert['user_id'] = $this->userId;
         $insert['description'] = $description;
@@ -93,8 +93,8 @@ class FixedCosts extends AppFunctions
         $insert['account'] = $account;
         $insert['note'] = $note;
         $insert['iteration'] = $iteration;
-        $insert['lastValuation'] = $lastValuation;
-        $insert['nextValuation'] = $nextValuation;
+        $insert['lastValuation'] = (!empty($lastValuation)) ? $lastValuation : 0;
+        $insert['nextValuation'] = (!empty($nextValuation)) ? $nextValuation : 0;
 
         $this->validate->convertToEnglishNumberFormat($insert['amount']);
         $this->validate->convertDateToTimestamp($insert['nextValuation']);
