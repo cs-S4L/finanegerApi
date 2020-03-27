@@ -27,7 +27,7 @@ class Accounts extends AppFunctions
                     $value['owner']
                 );
 
-                $return[$key] = $value;
+                $return[$value['id']] = $value;
 
             }
         }

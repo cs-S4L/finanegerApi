@@ -20,7 +20,7 @@ class Bills extends AppFunctions
             'user_id = \'' . $this->userId . '\'',
             '*',
             $limit,
-            'createDate',
+            'payed, createDate',
             'DESC',
             $offset
         );
