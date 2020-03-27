@@ -121,14 +121,17 @@ class Authentication
             'user_id = "' . $userId . '" AND session_id = "' . $sessionId . '"'
         );
 
-        if (empty($sessionIdDb)
-            || count($sessionIdDb) > 1
-            || time() > $sessionIdDb[0]['expireDate']
-        ) {
+        if (empty($sessionIdDb)) {
             return false;
-        } else {
-            return true;
         }
+        if (count($sessionIdDb) > 1) {
+            return false;
+        }
+        if (time() > $sessionIdDb[0]['expireDate']) {
+            return false;
+        }
+
+        return true;
     }
 
     public function refreshSession($sessionId, $userId)
@@ -192,7 +195,8 @@ class Authentication
             array(
                 'user_id' => $user['id'],
                 'session_id' => $sessionId,
-                'expireDate' => strtotime('+1 week'),
+                // 'expireDate' => strtotime('+1 week'),
+                'expireDate' => strtotime('+30 seconds'),
             )
         );
 

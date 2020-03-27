@@ -25,12 +25,12 @@ abstract class Endpoint
         $this->validate = classes\Validate::get();
         $this->authentication = classes\Authentication::get();
 
-        $this->validate->escapeStrings(
-            $data['userToken']['userId'],
-            $data['userToken']['sessionId']
-        );
-
         if (isset($data['userToken'])) {
+            $this->validate->escapeStrings(
+                $data['userToken']['userId'],
+                $data['userToken']['sessionId']
+            );
+
             $valid = $this->authentication->checkSessionId(
                 $data['userToken']['userId'],
                 $data['userToken']['sessionId']
