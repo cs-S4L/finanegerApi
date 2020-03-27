@@ -75,11 +75,6 @@ class Authentication
             $validKeys = false;
         }
 
-        // benutze Keys aus DB löschen
-        // $result = $this->database->deleteFromDatabase(
-        //     'auth_keys',
-        //     'api_key = "' . $api_key . '"'
-        // );
         return $validKeys;
     }
 
@@ -94,6 +89,7 @@ class Authentication
 
     public function createSessionId($data)
     {
+        $this->clearSessionIds();
 
         $userAuthentication = $this->authenticateUser($data['email'], $data['password']);
 
@@ -146,6 +142,15 @@ class Authentication
                 'user_id' => $userId,
                 'session_id' => $sessionId,
             )
+        );
+    }
+
+    public function clearSessionIds()
+    {
+        $time = time() - 1;
+        return $this->database->deleteFromDatabase(
+            'session_ids',
+            "expireDate < $time"
         );
     }
 
