@@ -195,8 +195,7 @@ class Authentication
             array(
                 'user_id' => $user['id'],
                 'session_id' => $sessionId,
-                // 'expireDate' => strtotime('+1 week'),
-                'expireDate' => strtotime('+30 seconds'),
+                'expireDate' => strtotime('+1 week'),
             )
         );
 
