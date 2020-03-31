@@ -141,6 +141,7 @@ class Finances extends AppFunctions
 
         $dbDataset = $dbDataset[0];
 
+        //if finance is connected to an account increase or decrease balance on said account
         if (!empty($insert['account'])
             && $dbDataset['amount'] != $insert['amount']
         ) {

@@ -51,7 +51,7 @@ class Bills extends Endpoint implements interfaces\iEndpoint
 
         $this->checkData();
 
-        // wenn id gesetzt ist, einzelnen Eintrag zurück geben
+        // if id is set return single entry
         if (isset($this->data['id'])) {
             $this->validate->escapeStrings(
                 $this->data['id']

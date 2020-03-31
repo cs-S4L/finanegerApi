@@ -64,7 +64,7 @@ abstract class Endpoint
         }
     }
 
-    //falls data nicht von String zu Array umgewandelt wurde
+    //in case data wasnt converted to an array
     protected function convertData(&$params)
     {
         if (is_array($this->data['data'])) {

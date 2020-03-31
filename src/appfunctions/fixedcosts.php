@@ -104,6 +104,7 @@ class FixedCosts extends AppFunctions
             $insert['note']
         );
 
+        //date should not be in Past
         $this->validate->validate(
             'pastDate', $insert['nextValuation'], $errors, 'nextValuation'
         );
@@ -116,6 +117,7 @@ class FixedCosts extends AppFunctions
             ));
         }
 
+        //if fixed Cost is connected to account create according Finance
         if (!empty($insert['account'])) {
             $todayTimestamp = strtotime('00:00:00');
 
@@ -127,7 +129,6 @@ class FixedCosts extends AppFunctions
 
                 } else {
                     $insert['nextValuation'] = strtotime('00:00:00 +1 month');
-                    // $insert['nextValuation'] = strtotime(date('Y-m-d', strtotime("+30 days")));
                 }
             }
         }

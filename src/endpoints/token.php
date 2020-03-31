@@ -6,6 +6,7 @@ use src\classes as classes;
 
 class Token extends Endpoint implements interfaces\iEndpoint
 {
+    // return Session Id if Keys and Credentials are correct
     public function set()
     {
         if (
@@ -32,6 +33,7 @@ class Token extends Endpoint implements interfaces\iEndpoint
 
             $result = $this->authentication->createSessionId($this->data);
 
+            //If Login fails dont return further information so potential attackers cannot scount information
             if ($result === false) {
                 die(json_encode(
                     array(
@@ -52,6 +54,7 @@ class Token extends Endpoint implements interfaces\iEndpoint
         }
     }
 
+    // return new Authentication keys
     public function get()
     {
         if (!empty($this->data)) {
@@ -68,6 +71,7 @@ class Token extends Endpoint implements interfaces\iEndpoint
         die('Endpoint not implemented');
     }
 
+    //delete session Id
     public function delete()
     {
         if (!$this->validSession) {

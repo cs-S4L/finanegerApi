@@ -139,25 +139,30 @@ class Bills extends AppFunctions
             $insert['description'] = $params['description'];
             $this->encrypt()->encryptData($insert['description']);
         }
+
         if (isset($params['dueDate'])) {
             $insert['dueDate'] = $params['dueDate'];
             $this->validate->convertDateToTimestamp($insert['dueDate']);
         }
+
         if (isset($params['amount'])) {
             $insert['amount'] = $params['amount'];
             $this->validate->convertToEnglishNumberFormat($insert['amount']);
         }
+
         if (isset($params['account'])) {
             $insert['account'] = $params['account'];
             if (empty($insert['account'])) {
                 $insert['account'] = 0;
             }
         }
+
         if (!empty($params['payed'])) {
             $insert['payed'] = $params['payed'];
         } else {
             $insert['payed'] = 0;
         }
+
         if (isset($params['note'])) {
             $insert['note'] = $params['note'];
             $this->encrypt()->encryptData($insert['note']);
@@ -176,6 +181,7 @@ class Bills extends AppFunctions
 
         $todayTimestamp = strtotime('00:00:00');
 
+        //If billed wasnt payed before but is now
         if ($params['payed'] == "on") {
             if (isset($params['account'])) {
                 $this->finances->createFinance(

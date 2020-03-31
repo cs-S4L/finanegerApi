@@ -56,6 +56,7 @@ class FixedCosts extends Endpoint implements interfaces\iEndpoint
 
         $this->checkData();
 
+        // if id is set return single entry
         if (isset($this->data['id'])) {
             $this->validate->escapeStrings($this->data['id']);
 

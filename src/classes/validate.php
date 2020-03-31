@@ -155,7 +155,6 @@ class Validate
 
     public function convertTimestampToDate(&$date)
     {
-        // $date = date('d.m.Y', $date);
         $date = date('Y.m.d', $date);
     }
 

@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
  * Copied and altert from Sae-Lessons
  */
@@ -22,14 +22,7 @@ class Utility
 
         $classFilePath = DIR__ROOT . $namespace . $classFileName;
 
-        require($classFilePath);
+        require $classFilePath;
     }
 
-    // public static function handleException(Throwable $exception) {
-    //     if (ini_get("display_errors") === "1") {
-    //         $exception->displayException();
-    //     } else {
-    //         echo "Ups, da ist wohl was schiefgelaufen! Der Techniker ist informiert.";
-    //     }
-    // }
 }

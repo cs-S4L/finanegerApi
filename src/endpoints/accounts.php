@@ -48,7 +48,7 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
 
         $this->checkData();
 
-        // wenn id gesetzt ist, einzelnen Eintrag zurück geben
+        //  if id is set return single entry
         if (isset($this->data['id'])) {
             $this->validate->escapeStrings($this->data['id']);
 
@@ -109,10 +109,7 @@ class Accounts extends Endpoint implements interfaces\iEndpoint
 
         $this->validate->escapeStrings($params['id']);
 
-        $return = $this->database->deleteFromDatabase(
-            'app_accounts',
-            'user_id = \'' . $this->userId . '\' AND id = \'' . $params['id'] . '\''
-        );
+        $return = $this->accounts->deleteAccount($params['id']);
 
         die(\json_encode(array('success' => true)));
     }

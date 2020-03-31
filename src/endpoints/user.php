@@ -7,6 +7,7 @@ use src\interfaces;
 
 class User extends Endpoint implements interfaces\iEndpoint
 {
+    //create new User and return according userToken
     public function set()
     {
         if (

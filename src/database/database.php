@@ -94,8 +94,6 @@ class Database
 
         $sql = $this->conn->prepare($statement);
 
-        // $this->logDatabaseAccess($statement);
-
         $sql->execute();
 
         return $sql->fetchAll($fetchMode);
@@ -114,11 +112,7 @@ class Database
 
         $sql = $this->conn->prepare($statement);
 
-        // $this->logDatabaseAccess($statement);
-
         return $sql->execute();
-
-        // return $sql->fetchAll($fetchMode);
     }
 
     public function updateDatabase(
@@ -186,20 +180,6 @@ class Database
         $sql = $this->conn->prepare($statement);
 
         return $sql->execute();
-    }
-
-    private function logDatabaseAccess($statement)
-    {
-        if (SERVER_MODE == 'PRODUCTION') {
-            return;
-        }
-
-        $log = date('m/d/Y h:i:s a', time()) . ':      ' . $statement;
-
-        //copied from stackoverflow.com
-        //https://stackoverflow.com/questions/24972424/create-or-write-append-in-text-file
-        $myfile = file_put_contents(DIR__ROOT . 'dbLogs.txt', $log . PHP_EOL, FILE_APPEND | LOCK_EX);
-
     }
 
 }

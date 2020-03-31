@@ -134,7 +134,6 @@ class Accounts extends AppFunctions
             'app_accounts',
             'user_id = \'' . $this->userId . '\' AND id = \'' . $id . '\''
         );
-
-    }
+    } //deleteAccount
 
 }
