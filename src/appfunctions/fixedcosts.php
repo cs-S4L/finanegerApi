@@ -139,7 +139,7 @@ class FixedCosts extends AppFunctions
             $lastInsertId
         );
 
-        if (!empty($insert['account'])) {
+        if (!empty($insert['account']) && $todayTimestamp == $insert['nextValuation']) {
             $this->finances->createFinance(
                 'Fixkostenpunkt: ' . $description,
                 $type,
